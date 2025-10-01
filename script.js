@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Block F: Event Registry ---
     addTaskBtn.addEventListener('click', addTask);
-    //clearAllBtn.addEventListener('click', clearAllTasks);
+    clearAllBtn.addEventListener('click', clearAllTasks);
 
     searchWeatherBtn.addEventListener('click', () => {
         const city = cityInput.value.trim();
