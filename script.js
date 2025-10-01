@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Block C: Service Configuration ---
    
     const weatherApiKey = 'YOUR_API_KEY_HERE';
+    let debounceTimer = null;
 
     // --- Block D: Module 1 Functions ---
     function renderTasks() {
@@ -54,10 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
   //---Can write the the required functions here
 
 
-
- 
-
-  
+    function debounceWeatherSearch(city) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            if (city && city.trim().length > 0) {
+                fetchWeather(city.trim());
+            }
+        }, 500);
+    }
 
     // --- Block E: Module 2 Functions sample data ---
     async function fetchWeather(city) {
@@ -91,6 +96,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Block F: Event Registry ---
     addTaskBtn.addEventListener('click', addTask);
     clearAllBtn.addEventListener('click', clearAllTasks);
+
+    cityInput.addEventListener('input', (e) => {
+        const city = e.target.value.trim();
+        debounceWeatherSearch(city);
+    });
 
     searchWeatherBtn.addEventListener('click', () => {
         const city = cityInput.value.trim();
