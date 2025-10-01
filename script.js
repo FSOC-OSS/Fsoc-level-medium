@@ -37,17 +37,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const taskText = document.createElement("span");
       taskText.textContent = task.text;
+      taskText.className = "task-text";
       if (task.completed) {
         taskText.classList.add("completed");
       }
 
+      const editBtn = document.createElement("button");
+      editBtn.className = "edit-btn";
+      editBtn.textContent = "✏️";
+      editBtn.title = "Edit task";
+      editBtn.addEventListener("click", () => toggleTaskEdit(index));
+
       const deleteBtn = document.createElement("button");
       deleteBtn.className = "delete-btn";
       deleteBtn.textContent = "🗑️";
+      deleteBtn.title = "Delete task";
       deleteBtn.addEventListener("click", () => deleteTask(index));
 
       li.appendChild(checkbox);
       li.appendChild(taskText);
+      li.appendChild(editBtn);
       li.appendChild(deleteBtn);
       taskList.appendChild(li);
     });
@@ -75,6 +84,81 @@ document.addEventListener("DOMContentLoaded", () => {
   function clearAllTasks() {
     tasks = [];
     renderTasks();
+  }
+
+  function toggleTaskEdit(index) {
+    const taskItem = document.querySelectorAll(".task-item")[index];
+    if (!taskItem) return;
+
+    const taskText = taskItem.querySelector(".task-text");
+    const editBtn = taskItem.querySelector(".edit-btn");
+
+    if (!taskText || !editBtn) return;
+
+    if (taskText.contentEditable === "true") {
+      // Save the task
+      const newText = taskText.textContent.trim();
+      if (newText && newText !== tasks[index].text) {
+        tasks[index].text = newText;
+      }
+      taskText.contentEditable = "false";
+      taskText.classList.remove("editing");
+      editBtn.textContent = "✏️";
+      editBtn.title = "Edit task";
+
+      // Remove any existing event listeners
+      taskText.removeEventListener("keydown", taskText._keyHandler);
+      delete taskText._keyHandler;
+    } else {
+      // Enter edit mode
+      taskText.contentEditable = "true";
+      taskText.classList.add("editing");
+      taskText.focus();
+      editBtn.textContent = "💾";
+      editBtn.title = "Save task";
+
+      // Select all text for easy editing
+      setTimeout(() => {
+        const range = document.createRange();
+        range.selectNodeContents(taskText);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }, 0);
+
+      // Add keyboard event listeners
+      const handleKeyPress = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          toggleTaskEdit(index);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          taskText.textContent = tasks[index].text; // Restore original text
+          taskText.contentEditable = "false";
+          taskText.classList.remove("editing");
+          editBtn.textContent = "✏️";
+          editBtn.title = "Edit task";
+          taskText.removeEventListener("keydown", handleKeyPress);
+        }
+      };
+
+      // Store reference to handler for cleanup
+      taskText._keyHandler = handleKeyPress;
+      taskText.addEventListener("keydown", handleKeyPress);
+
+      // Add click outside to save functionality
+      const handleClickOutside = (e) => {
+        if (!taskItem.contains(e.target)) {
+          toggleTaskEdit(index);
+          document.removeEventListener("click", handleClickOutside);
+        }
+      };
+
+      // Add a small delay to prevent immediate triggering
+      setTimeout(() => {
+        document.addEventListener("click", handleClickOutside);
+      }, 100);
+    }
   }
   // --- Contact Page Functions ---
   function showSection(sectionName) {
