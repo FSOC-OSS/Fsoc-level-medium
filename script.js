@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const taskText = document.createElement('span');
             taskText.textContent = task.text;
+            taskText.style.textDecoration = task.completed ? 'line-through' : 'none';
             
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
@@ -50,6 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
             tasks.push({ text: text, completed: false });
             renderTasks();
         }
+    }
+    // --- Toggle completion ---
+    function toggleTaskCompletion(index) {
+        tasks[index].completed = !tasks[index].completed;
+        renderTasks();
     }
   //---Can write the the required functions here
 
