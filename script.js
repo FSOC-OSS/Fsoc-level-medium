@@ -12,57 +12,137 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Block B: Data Store ---
     let tasks = [];
+    let taskIdCounter = 0; 
 
     // --- Block C: Service Configuration ---
    
     const weatherApiKey = 'YOUR_API_KEY_HERE';
-    let debounceTimer = null;
 
     // --- Block D: Module 1 Functions ---
+    
+    // Create individual task element
+    function createTaskElement(task, index) {
+        const li = document.createElement('li');
+        li.className = 'task-item';
+        li.dataset.taskId = task.id;
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = task.completed;
+        checkbox.addEventListener('change', () => toggleTaskCompletion(index));
+        
+        const taskText = document.createElement('span');
+        taskText.textContent = task.text;
+        if (task.completed) {
+            taskText.style.textDecoration = 'line-through';
+        }
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.addEventListener('click', () => deleteTask(index));
+
+        li.appendChild(checkbox);
+        li.appendChild(taskText);
+        li.appendChild(deleteBtn);
+        
+        return li;
+    }
+
+    function addTaskToDOM(task, index) {
+        const taskElement = createTaskElement(task, index);
+        taskList.appendChild(taskElement);
+    }
+
+    function updateTaskInDOM(task, index) {
+        const taskElement = taskList.querySelector(`[data-task-id="${task.id}"]`);
+        if (taskElement) {
+            const checkbox = taskElement.querySelector('input[type="checkbox"]');
+            const taskText = taskElement.querySelector('span');
+            
+            checkbox.checked = task.completed;
+            taskText.textContent = task.text;
+            taskText.style.textDecoration = task.completed ? 'line-through' : 'none';
+            
+            checkbox.replaceWith(checkbox.cloneNode(true));
+            const newCheckbox = taskElement.querySelector('input[type="checkbox"]');
+            newCheckbox.checked = task.completed;
+            newCheckbox.addEventListener('change', () => toggleTaskCompletion(index));
+        }
+    }
+
+
+    function removeTaskFromDOM(taskId) {
+        const taskElement = taskList.querySelector(`[data-task-id="${taskId}"]`);
+        if (taskElement) {
+            taskElement.remove();
+        }
+    }
+
     function renderTasks() {
         taskList.innerHTML = '';
         tasks.forEach((task, index) => {
-            const li = document.createElement('li');
-            li.className = 'task-item';
-            
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = task.completed;
-            checkbox.addEventListener('change', () => toggleTaskCompletion(index));
-            
-            const taskText = document.createElement('span');
-            taskText.textContent = task.text;
-            
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.textContent = '🗑️';
-           
-
-            li.appendChild(checkbox);
-            li.appendChild(taskText);
-            li.appendChild(deleteBtn);
-            taskList.appendChild(li);
+            addTaskToDOM(task, index);
         });
     }
 
     function addTask() {
         const text = taskInput.value.trim();
         if (text) {
-            tasks.push({ text: text, completed: false });
-            renderTasks();
+            const newTask = { 
+                id: ++taskIdCounter, 
+                text: text, 
+                completed: false 
+            };
+            tasks.push(newTask);
+            addTaskToDOM(newTask, tasks.length - 1);
+            taskInput.value = ''; // Clear input
         }
     }
+
+    function toggleTaskCompletion(index) {
+        if (index >= 0 && index < tasks.length) {
+            tasks[index].completed = !tasks[index].completed;
+            updateTaskInDOM(tasks[index], index);
+        }
+    }
+
+    function deleteTask(index) {
+        if (index >= 0 && index < tasks.length) {
+            const taskId = tasks[index].id;
+            tasks.splice(index, 1);
+            removeTaskFromDOM(taskId);
+            // Update indices for remaining tasks
+            updateAllTaskIndices();
+        }
+    }
+
+    function clearAllTasks() {
+        tasks = [];
+        taskList.innerHTML = '';
+    }
+
+    // Update event listeners after task deletion to maintain correct indices
+    function updateAllTaskIndices() {
+        const taskElements = taskList.querySelectorAll('.task-item');
+        taskElements.forEach((element, newIndex) => {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            const deleteBtn = element.querySelector('.delete-btn');
+            
+            // Clone and replace to remove old event listeners
+            const newCheckbox = checkbox.cloneNode(true);
+            const newDeleteBtn = deleteBtn.cloneNode(true);
+            
+            newCheckbox.addEventListener('change', () => toggleTaskCompletion(newIndex));
+            newDeleteBtn.addEventListener('click', () => deleteTask(newIndex));
+            
+            checkbox.replaceWith(newCheckbox);
+            deleteBtn.replaceWith(newDeleteBtn);
+        });
+    }
+
   //---Can write the the required functions here
 
-
-    function debounceWeatherSearch(city) {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            if (city && city.trim().length > 0) {
-                fetchWeather(city.trim());
-            }
-        }, 500);
-    }
 
     // --- Block E: Module 2 Functions sample data ---
     async function fetchWeather(city) {
@@ -97,10 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
     addTaskBtn.addEventListener('click', addTask);
     clearAllBtn.addEventListener('click', clearAllTasks);
 
-    cityInput.addEventListener('input', (e) => {
-        const city = e.target.value.trim();
-        debounceWeatherSearch(city);
-    });
 
     searchWeatherBtn.addEventListener('click', () => {
         const city = cityInput.value.trim();
