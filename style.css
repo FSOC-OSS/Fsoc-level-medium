@@ -232,9 +232,139 @@ footer {
     color: var(--secondary-color);
 }
 
+/* --- Contact Page Styles --- */
+.hidden {
+    display: none;
+}
+
+.contact-form, .contact-info {
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+    background-color: var(--primary-hover-color);
+}
+
+.contact-details {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+.contact-item i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-top: 0.25rem;
+    min-width: 24px;
+}
+
+.contact-item h3 {
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-size: 1.1rem;
+}
+
+.contact-item p {
+    color: var(--secondary-color);
+    line-height: 1.5;
+}
+
+/* Success/Error Messages */
+.message {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Navigation Active States */
+.nav-link.active {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+}
+
 /* --- Responsive Design --- */
 @media (max-width: 992px) {
     .container {
         grid-template-columns: 1fr;
+    }
+    
+    .contact-details {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .contact-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .contact-item i {
+        margin: 0 auto 0.5rem;
     }
 }

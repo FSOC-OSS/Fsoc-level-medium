@@ -14,41 +14,104 @@
         <nav>
             <div class="logo">Fsoc-Medium</div>
             <ul class="nav-links">
-                <li><a href="#" class="nav-link active">Dashboard</a></li>
-                <li><a href="#" class="nav-link">About</a></li>
-                <li><a href="#" class="nav-link">Contact</a></li>
+                <li><a href="#" class="nav-link active" data-section="dashboard">Dashboard</a></li>
+                <li><a href="#" class="nav-link" data-section="about">About</a></li>
+                <li><a href="#" class="nav-link" data-section="contact">Contact</a></li>
             </ul>
             <button id="theme-toggle" class="theme-btn">Toggle Theme</button>
         </nav>
     </header>
 
     <main class="container">
-        <section class="card task-manager">
-            <h2>My Tasks</h2>
-            <div class="task-input-container">
-                <input type="text" id="task-input" placeholder="e.g., Finish my project">
-                <button id="add-task-btn">Add Task</button>
-            </div>
-            <div class="task-filters">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="active">Active</button>
-                <button class="filter-btn" data-filter="completed">Completed</button>
-            </div>
-            <ul id="task-list">
-                </ul>
-             <button id="clear-all-btn">Clear All</button>
-        </section>
+        <!-- Dashboard Section -->
+        <div id="dashboard-section">
+            <section class="card task-manager">
+                <h2>My Tasks</h2>
+                <div class="task-input-container">
+                    <input type="text" id="task-input" placeholder="e.g., Finish my project">
+                    <button id="add-task-btn">Add Task</button>
+                </div>
+                <div class="task-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="active">Active</button>
+                    <button class="filter-btn" data-filter="completed">Completed</button>
+                </div>
+                <ul id="task-list">
+                    </ul>
+                 <button id="clear-all-btn">Clear All</button>
+            </section>
 
-        <section class="card weather-widget">
-            <h2>Weather Report</h2>
-            <div class="weather-search">
-                <input type="text" id="city-input" placeholder="Enter city name">
-                <button id="search-weather-btn">Search</button>
-            </div>
-            <div id="weather-info">
-                <p class="loading-text">Search for a city to see the weather...</p>
-            </div>
-        </section>
+            <section class="card weather-widget">
+                <h2>Weather Report</h2>
+                <div class="weather-search">
+                    <input type="text" id="city-input" placeholder="Enter city name">
+                    <button id="search-weather-btn">Search</button>
+                </div>
+                <div id="weather-info">
+                    <p class="loading-text">Search for a city to see the weather...</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Contact Section -->
+        <div id="contact-section" class="hidden">
+            <section class="card contact-form">
+                <h2>Get in Touch</h2>
+                <form id="contact-form">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <input type="text" id="subject" name="subject" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Send Message</button>
+                </form>
+            </section>
+
+            <section class="card contact-info">
+                <h2>Contact Information</h2>
+                <div class="contact-details">
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h3>Email</h3>
+                            <p>contact@fsoc-medium.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h3>Phone</h3>
+                            <p>+1 (555) 123-4567</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h3>Address</h3>
+                            <p>123 Developer Street<br>Tech City, TC 12345</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <h3>Business Hours</h3>
+                            <p>Mon - Fri: 9:00 AM - 6:00 PM<br>Sat: 10:00 AM - 4:00 PM</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
     </main>
 
     <footer>
