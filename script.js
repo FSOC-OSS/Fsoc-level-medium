@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   
 
-    // --- Block E: Module 2 Functions sample data ---
+     // --- Block E: Module 2 Functions sample data ---
     async function fetchWeather(city) {
         const url = `write something here `;
         try {
@@ -68,10 +68,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`Request failed (${response.status})`);
             }
             const data = await response.json();
-            displayWeather(data);
+            
+            if (data && data.name && data.main && data.weather) {
+                displayWeather(data);
+            } else {
+                throw new Error('Invalid weather data received');
+            }
         } catch (error) {
             console.error('Service call failed:', error);
-            weatherInfo.innerHTML = `<p class="error-text">Data unavailable.</p>`;
+            
+            let errorMessage = 'Weather data unavailable. ';
+            
+            if (error.message.includes('Failed to fetch') || !navigator.onLine) {
+                errorMessage += 'Please check your internet connection and try again.';
+            } else {
+                const statusMatch = error.message.match(/\((\d+)\)/);
+                const statusCode = statusMatch ? parseInt(statusMatch[1]) : null;
+                
+                switch (statusCode) {
+                    case 400:
+                        errorMessage += 'Invalid request. Please check the city name.';
+                        break;
+                    case 401:
+                        errorMessage += 'Authentication failed. Please contact support.';
+                        break;
+                    case 403:
+                        errorMessage += 'Access denied. API key may be invalid.';
+                        break;
+                    case 404:
+                        errorMessage += 'City not found. Please check the city name.';
+                        break;
+                    case 429:
+                        errorMessage += 'Too many requests. Please wait and try again.';
+                        break;
+                    case 500:
+                    case 502:
+                    case 503:
+                    case 504:
+                        errorMessage += 'Weather service is temporarily down. Please try again later.';
+                        break;
+                    default:
+                        errorMessage += 'Please try again later.';
+                        break;
+                }
+            }
+            
+            weatherInfo.innerHTML = `<p class="error-text">${errorMessage}</p>`;
         }
     }
 
