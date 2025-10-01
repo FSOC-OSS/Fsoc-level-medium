@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let tasks = [];
 
     // --- Block C: Service Configuration ---
-   
+
+    
     const weatherApiKey = 'YOUR_API_KEY_HERE';
 
     // --- Block D: Module 1 Functions ---
@@ -23,19 +24,19 @@ document.addEventListener('DOMContentLoaded', () => {
         tasks.forEach((task, index) => {
             const li = document.createElement('li');
             li.className = 'task-item';
-            
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = task.completed;
             checkbox.addEventListener('change', () => toggleTaskCompletion(index));
-            
+
             const taskText = document.createElement('span');
             taskText.textContent = task.text;
-            
+
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
             deleteBtn.textContent = '🗑️';
-           
+
 
             li.appendChild(checkbox);
             li.appendChild(taskText);
@@ -51,17 +52,17 @@ document.addEventListener('DOMContentLoaded', () => {
             renderTasks();
         }
     }
-  //---Can write the the required functions here
+    //---Can write the the required functions here
 
 
 
- 
 
-  
+
+
 
     // --- Block E: Module 2 Functions sample data ---
     async function fetchWeather(city) {
-        const url = `write something here `;
+        const url = `https://api.openweathermap.org/data/2.5/weather?units=metric&q=${city}&appid=${weatherApiKey}`;
         try {
             const response = await fetch(url);
             if (!response.ok) {
@@ -71,7 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
             displayWeather(data);
         } catch (error) {
             console.error('Service call failed:', error);
-            weatherInfo.innerHTML = `<p class="error-text">Data unavailable.</p>`;
+            weatherInfo.innerHTML = `<p class="error-text">
+            ❌ Oops! "<strong>${city}</strong>" city not found .<br>
+            🧐 Double-check the spelling or try a valid city name.<br>
+            </p>
+            `;
         }
     }
 
@@ -86,11 +91,11 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-  
+
 
     // --- Block F: Event Registry ---
     addTaskBtn.addEventListener('click', addTask);
-    clearAllBtn.addEventListener('click', clearAllTasks);
+    //clearAllBtn.addEventListener('click', clearAllTasks);
 
     searchWeatherBtn.addEventListener('click', () => {
         const city = cityInput.value.trim();
@@ -105,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Block G: Application Entry Point ---
     function init() {
-        fetchWeather("sdfasdfnsa,mn,mn.");
+        //fetchWeather("sdfasdfnsa,mn,mn.");
         renderTasks();
     }
 
