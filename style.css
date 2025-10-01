@@ -32,7 +32,7 @@ body {
     font-family: 'Poppins', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
-    transition: background-color 0.3s, color 0.3s;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -91,7 +91,7 @@ nav {
     border-radius: 15px;
     padding: 2rem;
     box-shadow: 0 4px 15px var(--shadow-color);
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* --- Task Manager --- */
@@ -124,6 +124,7 @@ nav {
     background-color: var(--card-bg-color);
     color: var(--text-color);
     min-width: 150px;
+    transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
 }
 
 button {
@@ -338,7 +339,7 @@ footer {
     font-size: 1rem;
     background-color: var(--card-bg-color);
     color: var(--text-color);
-    transition: border-color 0.3s;
+    transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
 }
 
 .form-group input:focus,

@@ -360,9 +360,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  themeToggle.addEventListener("click", () => {
-    console.log("Theme toggle logic is not implemented.");
-  });
+  // --- Theme Toggle Functionality ---
+  function toggleTheme() {
+    const body = document.body;
+    const isDark = body.classList.contains('dark-theme');
+    
+    if (isDark) {
+      body.classList.remove('dark-theme');
+      localStorage.setItem('theme', 'light');
+      themeToggle.textContent = '🌙 Dark Mode';
+      themeToggle.title = 'Switch to Dark Mode';
+    } else {
+      body.classList.add('dark-theme');
+      localStorage.setItem('theme', 'dark');
+      themeToggle.textContent = '☀️ Light Mode';
+      themeToggle.title = 'Switch to Light Mode';
+    }
+  }
+
+  // Load saved theme on page load
+  function loadTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      document.body.classList.add('dark-theme');
+      themeToggle.textContent = '☀️ Light Mode';
+      themeToggle.title = 'Switch to Light Mode';
+    } else {
+      document.body.classList.remove('dark-theme');
+      themeToggle.textContent = '🌙 Dark Mode';
+      themeToggle.title = 'Switch to Dark Mode';
+    }
+  }
+
+  themeToggle.addEventListener("click", toggleTheme);
 
   // Navigation event listeners
   navLinks.forEach((link) => {
@@ -378,6 +410,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Block G: Application Entry Point ---
   function init() {
+    loadTheme(); // Load saved theme preference
     fetchWeather("sdfasdfnsa,mn,mn.");
     renderTasks();
   }
