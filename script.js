@@ -52,6 +52,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
   //---Can write the the required functions here
+    function toggleTaskCompletion(index) {
+        tasks[index].completed = !tasks[index].completed;
+
+        // Move completed tasks to the bottom
+        tasks.sort((a, b) => a.completed - b.completed);
+
+        renderTasks();
+    }
+
 
 
 
