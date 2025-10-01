@@ -298,6 +298,12 @@ button {
     background-color: #dc3545;
 }
 
+#clear-all-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #c64b57;
+}
+
 /* --- Weather Widget --- */
 .weather-search {
     display: flex;
@@ -343,6 +349,84 @@ footer {
     text-align: center;
     padding: 2rem;
     color: var(--secondary-color);
+}
+
+/* --- Confirmation Modal --- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    width: min(520px, 92vw);
+    background: var(--card-bg-color);
+    color: var(--text-color);
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    overflow: hidden;
+    animation: modalIn 160ms ease-out;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-body {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem 1.25rem 0.5rem;
+}
+
+.modal-icon {
+    color: #e6a23c;
+    font-size: 1.75rem;
+    margin-top: 0.15rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 0 1.25rem 1.25rem;
+}
+
+.modal-close {
+    background: none;
+    color: var(--secondary-color);
+    font-size: 1.25rem;
+}
+
+.btn {
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-secondary {
+    background: var(--border-color);
+    color: var(--text-color);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+}
+
+.btn-danger {
+    background: #dc3545;
+}
+
+@keyframes modalIn {
+    from { transform: translateY(6px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
 /* --- Contact Page Styles --- */

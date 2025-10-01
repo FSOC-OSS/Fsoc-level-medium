@@ -10,6 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const weatherInfo = document.getElementById("weather-info");
   const themeToggle = document.getElementById("theme-toggle");
   const copyrightYear = document.querySelector("footer p");
+  // Confirmation modal elements
+  const confirmationModal = document.getElementById("confirmation-modal");
+  const confirmationMessage = document.getElementById("confirmation-message");
+  const confirmActionBtn = document.getElementById("confirm-action-btn");
 
   // Contact page elements
   const navLinks = document.querySelectorAll(".nav-link");
@@ -28,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Block D: Module 1 Functions ---
   function renderTasks() {
     taskList.innerHTML = "";
-    
+
     // Show empty state message if no tasks
     if (tasks.length === 0) {
       const emptyMessage = document.createElement("li");
@@ -41,35 +45,37 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
       taskList.appendChild(emptyMessage);
+      updateClearAllState();
       return;
     }
-    
+
     // Filter tasks based on current filter
     let filteredTasks = tasks;
-    const currentFilter = document.querySelector('.filter-btn.active')?.textContent || 'All';
-    
-    if (currentFilter === 'Active') {
-      filteredTasks = tasks.filter(task => !task.completed);
-    } else if (currentFilter === 'Completed') {
-      filteredTasks = tasks.filter(task => task.completed);
+    const currentFilter =
+      document.querySelector(".filter-btn.active")?.textContent || "All";
+
+    if (currentFilter === "Active") {
+      filteredTasks = tasks.filter((task) => !task.completed);
+    } else if (currentFilter === "Completed") {
+      filteredTasks = tasks.filter((task) => task.completed);
     }
-    
+
     // Show filtered empty state if no tasks match filter
     if (filteredTasks.length === 0 && tasks.length > 0) {
       const emptyMessage = document.createElement("li");
       emptyMessage.className = "empty-state";
-      
+
       let message = "";
       let icon = "fas fa-clipboard-list";
-      
-      if (currentFilter === 'Active') {
+
+      if (currentFilter === "Active") {
         message = "No active tasks";
         icon = "fas fa-check-circle";
-      } else if (currentFilter === 'Completed') {
+      } else if (currentFilter === "Completed") {
         message = "No completed tasks";
         icon = "fas fa-tasks";
       }
-      
+
       emptyMessage.innerHTML = `
         <div class="empty-state-content">
           <i class="${icon}"></i>
@@ -78,20 +84,23 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
       taskList.appendChild(emptyMessage);
+      updateClearAllState();
       return;
     }
-    
+
     filteredTasks.forEach((task, filteredIndex) => {
       // Find the original index in the tasks array
-      const originalIndex = tasks.findIndex(t => t === task);
-      
+      const originalIndex = tasks.findIndex((t) => t === task);
+
       const li = document.createElement("li");
       li.className = "task-item";
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = task.completed;
-      checkbox.addEventListener("change", () => toggleTaskCompletion(originalIndex));
+      checkbox.addEventListener("change", () =>
+        toggleTaskCompletion(originalIndex)
+      );
 
       const taskText = document.createElement("span");
       taskText.textContent = task.text;
@@ -103,16 +112,16 @@ document.addEventListener("DOMContentLoaded", () => {
       // Create due date display
       const dueDateContainer = document.createElement("div");
       dueDateContainer.className = "due-date-container";
-      
+
       if (task.dueDate) {
         const dueDate = new Date(task.dueDate);
         const today = new Date();
         const timeDiff = dueDate.getTime() - today.getTime();
         const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-        
+
         const dueDateSpan = document.createElement("span");
         dueDateSpan.className = "due-date";
-        
+
         if (daysDiff < 0) {
           dueDateSpan.textContent = `Overdue by ${Math.abs(daysDiff)} day(s)`;
           dueDateSpan.classList.add("overdue");
@@ -129,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
           dueDateSpan.textContent = `Due ${dueDate.toLocaleDateString()}`;
           dueDateSpan.classList.add("due-normal");
         }
-        
+
         dueDateContainer.appendChild(dueDateSpan);
       }
 
@@ -152,30 +161,32 @@ document.addEventListener("DOMContentLoaded", () => {
       li.appendChild(deleteBtn);
       taskList.appendChild(li);
     });
+    // Update Clear All availability based on task count
+    updateClearAllState();
   }
 
   function addTask() {
     const text = taskInput.value.trim();
     const dueDate = dueDateInput.value;
-    
+
     if (text) {
       // Validate due date
       if (dueDate) {
         const selectedDate = new Date(dueDate);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         if (selectedDate < today) {
           alert("Due date cannot be in the past!");
           return;
         }
       }
-      
-      tasks.push({ 
-        text: text, 
-        completed: false, 
+
+      tasks.push({
+        text: text,
+        completed: false,
         dueDate: dueDate || null,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
       taskInput.value = "";
       dueDateInput.value = "";
@@ -190,16 +201,16 @@ document.addEventListener("DOMContentLoaded", () => {
       if (a.completed !== b.completed) {
         return a.completed - b.completed;
       }
-      
+
       // Then sort by due date (earliest first)
       if (a.dueDate && b.dueDate) {
         return new Date(a.dueDate) - new Date(b.dueDate);
       }
-      
+
       // Tasks with due dates come before tasks without
       if (a.dueDate && !b.dueDate) return -1;
       if (!a.dueDate && b.dueDate) return 1;
-      
+
       // Finally sort by creation date (newest first)
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
@@ -217,8 +228,79 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function clearAllTasks() {
-    tasks = [];
-    renderTasks();
+    if (
+      confirm(
+        "This will delete all tasks. You can't undo this action. Are you sure?"
+      )
+    ) {
+      tasks = [];
+      renderTasks();
+    }
+  }
+
+  // --- Confirmation Modal Utilities ---
+  let currentConfirmHandler = null;
+
+  function showConfirmation({
+    message,
+    confirmText = "Confirm",
+    confirmType = "primary",
+    onConfirm,
+  }) {
+    console.log("showConfirmation called with:", {
+      message,
+      confirmText,
+      confirmType,
+    });
+    console.log("confirmationModal element:", confirmationModal);
+    console.log("confirmationMessage element:", confirmationMessage);
+    console.log("confirmActionBtn element:", confirmActionBtn);
+
+    confirmationMessage.textContent = message;
+    confirmActionBtn.textContent = confirmText;
+    confirmActionBtn.classList.remove("btn-danger", "btn-primary");
+    confirmActionBtn.classList.add(
+      confirmType === "danger" ? "btn-danger" : "btn-primary"
+    );
+
+    // Clean previous handler
+    if (currentConfirmHandler) {
+      confirmActionBtn.removeEventListener("click", currentConfirmHandler);
+    }
+
+    currentConfirmHandler = () => {
+      closeConfirmationModal();
+      try {
+        if (typeof onConfirm === "function") onConfirm();
+      } catch (err) {
+        console.error("Confirmation handler failed", err);
+      }
+    };
+    confirmActionBtn.addEventListener("click", currentConfirmHandler);
+
+    console.log("Removing 'hidden' class from modal");
+    confirmationModal.classList.remove("hidden");
+    console.log("Modal classes after removal:", confirmationModal.className);
+
+    // Force modal to be visible for testing
+    confirmationModal.style.display = "flex";
+    confirmationModal.style.visibility = "visible";
+    confirmationModal.style.opacity = "1";
+  }
+
+  window.closeConfirmationModal = function () {
+    confirmationModal.classList.add("hidden");
+    if (currentConfirmHandler) {
+      confirmActionBtn.removeEventListener("click", currentConfirmHandler);
+      currentConfirmHandler = null;
+    }
+  };
+
+  // Enable/disable Clear All based on whether there are tasks
+  function updateClearAllState() {
+    if (!clearAllBtn) return;
+    const noTasks = tasks.length === 0;
+    clearAllBtn.disabled = noTasks;
   }
 
   function toggleTaskEdit(index) {
@@ -407,7 +489,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Block F: Event Registry ---
   addTaskBtn.addEventListener("click", addTask);
-  clearAllBtn.addEventListener("click", clearAllTasks);
+
+  clearAllBtn.addEventListener("click", (e) => {
+    if (tasks.length === 0) {
+      e.preventDefault();
+      return;
+    }
+    clearAllTasks();
+  });
 
   searchWeatherBtn.addEventListener("click", () => {
     const city = cityInput.value.trim();
@@ -419,34 +508,36 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Theme Toggle Functionality ---
   function toggleTheme() {
     const body = document.body;
-    const isDark = body.classList.contains('dark-theme');
-    
+    const isDark = body.classList.contains("dark-theme");
+
     if (isDark) {
-      body.classList.remove('dark-theme');
-      localStorage.setItem('theme', 'light');
-      themeToggle.textContent = '🌙 Dark Mode';
-      themeToggle.title = 'Switch to Dark Mode';
+      body.classList.remove("dark-theme");
+      localStorage.setItem("theme", "light");
+      themeToggle.textContent = "🌙 Dark Mode";
+      themeToggle.title = "Switch to Dark Mode";
     } else {
-      body.classList.add('dark-theme');
-      localStorage.setItem('theme', 'dark');
-      themeToggle.textContent = '☀️ Light Mode';
-      themeToggle.title = 'Switch to Light Mode';
+      body.classList.add("dark-theme");
+      localStorage.setItem("theme", "dark");
+      themeToggle.textContent = "☀️ Light Mode";
+      themeToggle.title = "Switch to Light Mode";
     }
   }
 
   // Load saved theme on page load
   function loadTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      document.body.classList.add('dark-theme');
-      themeToggle.textContent = '☀️ Light Mode';
-      themeToggle.title = 'Switch to Light Mode';
+    const savedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+
+    if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+      document.body.classList.add("dark-theme");
+      themeToggle.textContent = "☀️ Light Mode";
+      themeToggle.title = "Switch to Light Mode";
     } else {
-      document.body.classList.remove('dark-theme');
-      themeToggle.textContent = '🌙 Dark Mode';
-      themeToggle.title = 'Switch to Dark Mode';
+      document.body.classList.remove("dark-theme");
+      themeToggle.textContent = "🌙 Dark Mode";
+      themeToggle.title = "Switch to Dark Mode";
     }
   }
 
