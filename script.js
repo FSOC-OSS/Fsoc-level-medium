@@ -28,14 +28,70 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Block D: Module 1 Functions ---
   function renderTasks() {
     taskList.innerHTML = "";
-    tasks.forEach((task, index) => {
+    
+    // Show empty state message if no tasks
+    if (tasks.length === 0) {
+      const emptyMessage = document.createElement("li");
+      emptyMessage.className = "empty-state";
+      emptyMessage.innerHTML = `
+        <div class="empty-state-content">
+          <i class="fas fa-clipboard-list"></i>
+          <h3>No tasks yet</h3>
+          <p>Add your first task above to get started!</p>
+        </div>
+      `;
+      taskList.appendChild(emptyMessage);
+      return;
+    }
+    
+    // Filter tasks based on current filter
+    let filteredTasks = tasks;
+    const currentFilter = document.querySelector('.filter-btn.active')?.textContent || 'All';
+    
+    if (currentFilter === 'Active') {
+      filteredTasks = tasks.filter(task => !task.completed);
+    } else if (currentFilter === 'Completed') {
+      filteredTasks = tasks.filter(task => task.completed);
+    }
+    
+    // Show filtered empty state if no tasks match filter
+    if (filteredTasks.length === 0 && tasks.length > 0) {
+      const emptyMessage = document.createElement("li");
+      emptyMessage.className = "empty-state";
+      
+      let message = "";
+      let icon = "fas fa-clipboard-list";
+      
+      if (currentFilter === 'Active') {
+        message = "No active tasks";
+        icon = "fas fa-check-circle";
+      } else if (currentFilter === 'Completed') {
+        message = "No completed tasks";
+        icon = "fas fa-tasks";
+      }
+      
+      emptyMessage.innerHTML = `
+        <div class="empty-state-content">
+          <i class="${icon}"></i>
+          <h3>${message}</h3>
+          <p>Try switching to a different filter or add new tasks!</p>
+        </div>
+      `;
+      taskList.appendChild(emptyMessage);
+      return;
+    }
+    
+    filteredTasks.forEach((task, filteredIndex) => {
+      // Find the original index in the tasks array
+      const originalIndex = tasks.findIndex(t => t === task);
+      
       const li = document.createElement("li");
       li.className = "task-item";
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = task.completed;
-      checkbox.addEventListener("change", () => toggleTaskCompletion(index));
+      checkbox.addEventListener("change", () => toggleTaskCompletion(originalIndex));
 
       const taskText = document.createElement("span");
       taskText.textContent = task.text;
@@ -81,13 +137,13 @@ document.addEventListener("DOMContentLoaded", () => {
       editBtn.className = "edit-btn";
       editBtn.textContent = "✏️";
       editBtn.title = "Edit task";
-      editBtn.addEventListener("click", () => toggleTaskEdit(index));
+      editBtn.addEventListener("click", () => toggleTaskEdit(originalIndex));
 
       const deleteBtn = document.createElement("button");
       deleteBtn.className = "delete-btn";
       deleteBtn.textContent = "🗑️";
       deleteBtn.title = "Delete task";
-      deleteBtn.addEventListener("click", () => deleteTask(index));
+      deleteBtn.addEventListener("click", () => deleteTask(originalIndex));
 
       li.appendChild(checkbox);
       li.appendChild(taskText);
