@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   // --- Block A: Element Hooks ---
   const taskInput = document.getElementById("task-input");
+  const dueDateInput = document.getElementById("due-date-input");
   const addTaskBtn = document.getElementById("add-task-btn");
   const taskList = document.getElementById("task-list");
   const clearAllBtn = document.getElementById("clear-all-btn");
@@ -43,6 +44,39 @@ document.addEventListener("DOMContentLoaded", () => {
         taskText.classList.add("completed");
       }
 
+      // Create due date display
+      const dueDateContainer = document.createElement("div");
+      dueDateContainer.className = "due-date-container";
+      
+      if (task.dueDate) {
+        const dueDate = new Date(task.dueDate);
+        const today = new Date();
+        const timeDiff = dueDate.getTime() - today.getTime();
+        const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        
+        const dueDateSpan = document.createElement("span");
+        dueDateSpan.className = "due-date";
+        
+        if (daysDiff < 0) {
+          dueDateSpan.textContent = `Overdue by ${Math.abs(daysDiff)} day(s)`;
+          dueDateSpan.classList.add("overdue");
+        } else if (daysDiff === 0) {
+          dueDateSpan.textContent = "Due today";
+          dueDateSpan.classList.add("due-today");
+        } else if (daysDiff === 1) {
+          dueDateSpan.textContent = "Due tomorrow";
+          dueDateSpan.classList.add("due-soon");
+        } else if (daysDiff <= 3) {
+          dueDateSpan.textContent = `Due in ${daysDiff} days`;
+          dueDateSpan.classList.add("due-soon");
+        } else {
+          dueDateSpan.textContent = `Due ${dueDate.toLocaleDateString()}`;
+          dueDateSpan.classList.add("due-normal");
+        }
+        
+        dueDateContainer.appendChild(dueDateSpan);
+      }
+
       const editBtn = document.createElement("button");
       editBtn.className = "edit-btn";
       editBtn.textContent = "✏️";
@@ -57,6 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       li.appendChild(checkbox);
       li.appendChild(taskText);
+      li.appendChild(dueDateContainer);
       li.appendChild(editBtn);
       li.appendChild(deleteBtn);
       taskList.appendChild(li);
@@ -65,15 +100,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function addTask() {
     const text = taskInput.value.trim();
+    const dueDate = dueDateInput.value;
+    
     if (text) {
-      tasks.push({ text: text, completed: false });
+      // Validate due date
+      if (dueDate) {
+        const selectedDate = new Date(dueDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (selectedDate < today) {
+          alert("Due date cannot be in the past!");
+          return;
+        }
+      }
+      
+      tasks.push({ 
+        text: text, 
+        completed: false, 
+        dueDate: dueDate || null,
+        createdAt: new Date().toISOString()
+      });
       taskInput.value = "";
+      dueDateInput.value = "";
+      sortTasks();
       renderTasks();
     }
   }
 
+  function sortTasks() {
+    tasks.sort((a, b) => {
+      // First sort by completion status (incomplete first)
+      if (a.completed !== b.completed) {
+        return a.completed - b.completed;
+      }
+      
+      // Then sort by due date (earliest first)
+      if (a.dueDate && b.dueDate) {
+        return new Date(a.dueDate) - new Date(b.dueDate);
+      }
+      
+      // Tasks with due dates come before tasks without
+      if (a.dueDate && !b.dueDate) return -1;
+      if (!a.dueDate && b.dueDate) return 1;
+      
+      // Finally sort by creation date (newest first)
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+  }
+
   function toggleTaskCompletion(index) {
     tasks[index].completed = !tasks[index].completed;
+    sortTasks();
     renderTasks();
   }
 
