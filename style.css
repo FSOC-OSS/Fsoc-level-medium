@@ -376,6 +376,117 @@ footer {
     border-bottom: 2px solid var(--primary-color);
 }
 
+/* --- About Page Styles --- */
+.about-hero {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.about-subtitle {
+    font-size: 1.2rem;
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+.about-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.about-text p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+.features-section {
+    margin-bottom: 2rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.feature-item {
+    background-color: var(--bg-color);
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.feature-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px var(--shadow-color);
+}
+
+.feature-item i {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.feature-item h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+}
+
+.feature-item p {
+    color: var(--secondary-color);
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+.tech-stack {
+    margin-bottom: 2rem;
+}
+
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.tech-item {
+    background-color: var(--bg-color);
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    transition: transform 0.3s, background-color 0.3s;
+    cursor: pointer;
+}
+
+.tech-item:hover {
+    transform: translateY(-3px);
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.tech-item i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    display: block;
+    transition: color 0.3s;
+}
+
+.tech-item:hover i {
+    color: white;
+}
+
+.tech-item span {
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: block;
+}
+
 /* --- Responsive Design --- */
 @media (max-width: 992px) {
     .container {
@@ -395,5 +506,26 @@ footer {
     
     .contact-item i {
         margin: 0 auto 0.5rem;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .tech-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .about-subtitle {
+        font-size: 1.1rem;
+    }
+    
+    .feature-item {
+        padding: 1rem;
+    }
+    
+    .feature-item i {
+        font-size: 2rem;
     }
 }

@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Contact page elements
   const navLinks = document.querySelectorAll(".nav-link");
   const dashboardSection = document.getElementById("dashboard-section");
+  const aboutSection = document.getElementById("about-section");
   const contactSection = document.getElementById("contact-section");
   const contactForm = document.getElementById("contact-form");
 
@@ -164,7 +165,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function showSection(sectionName) {
     // Hide all sections
     dashboardSection.classList.add("hidden");
-    contactSection.classList.add("hidden");
+    if (aboutSection) {
+      aboutSection.classList.add("hidden");
+    }
+    if (contactSection) {
+      contactSection.classList.add("hidden");
+    }
 
     // Remove active class from all nav links
     navLinks.forEach((link) => link.classList.remove("active"));
@@ -176,16 +182,19 @@ document.addEventListener("DOMContentLoaded", () => {
         .querySelector('[data-section="dashboard"]')
         .classList.add("active");
     } else if (sectionName === "contact") {
-      contactSection.classList.remove("hidden");
-      document
-        .querySelector('[data-section="contact"]')
-        .classList.add("active");
+      if (contactSection) {
+        contactSection.classList.remove("hidden");
+        document
+          .querySelector('[data-section="contact"]')
+          .classList.add("active");
+      }
     } else if (sectionName === "about") {
-      // For now, show dashboard as about page is not implemented
-      dashboardSection.classList.remove("hidden");
-      document
-        .querySelector('[data-section="dashboard"]')
-        .classList.add("active");
+      if (aboutSection) {
+        aboutSection.classList.remove("hidden");
+        document
+          .querySelector('[data-section="about"]')
+          .classList.add("active");
+      }
     }
   }
 
