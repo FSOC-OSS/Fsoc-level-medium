@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Block F: Event Registry ---
     addTaskBtn.addEventListener('click', addTask);
-    clearAllBtn.addEventListener('click', clearAllTasks);
+    //clearAllBtn.addEventListener('click', clearAllTasks);
 
     searchWeatherBtn.addEventListener('click', () => {
         const city = cityInput.value.trim();
@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Block G: Application Entry Point ---
     function init() {
+        console.log("Welcome to your task manager! 🎉");
         fetchWeather("sdfasdfnsa,mn,mn.");
         renderTasks();
     }
