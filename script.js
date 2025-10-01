@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const weatherInfo = document.getElementById('weather-info');
     const themeToggle = document.getElementById('theme-toggle');
     const copyrightYear = document.querySelector('footer p');
+    const errorMsg = document.getElementById('error-msg'); // new error placeholder
 
     // --- Block B: Data Store ---
     let tasks = [];
@@ -49,9 +50,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (text) {
             tasks.push({ text: text, completed: false });
             renderTasks();
+            taskInput.value = '';
+            errorMsg.textContent = ''; // clear error
+        } else {
+            errorMsg.textContent = "The task is empty. Please enter a valid task.";
         }
     }
-  //---Can write the the required functions here
+     function toggleTaskCompletion(index) {
+        tasks[index].completed = !tasks[index].completed;
+        renderTasks();
+    }
+
+    function deleteTask(index) {
+        tasks.splice(index, 1);
+        renderTasks();
+    }
+
+    function clearAllTasks() {
+        tasks = [];
+        renderTasks();
+    }
 
 
 
