@@ -1,0 +1,55 @@
+.hero{
+            display: flex;
+            gap: 12px;
+            flex-direction: row;
+        }
+
+@media (max-width: 992px) {
+    .hero {
+        flex-direction: column;
+        align-items: center;
+    }
+    .hero-img {
+        order: -1;
+        margin-bottom: 2rem;
+    }
+    .hero-img img {
+            height: 100%;
+            width: 100%;
+            object-fit: contain;
+    }
+}
+        
+        .her-img{
+            max-height: 320px;
+            max-width: 320px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .about{
+            margin-left: 2%;
+            margin-right: 2%;
+            margin-top: 20px;
+        }
+        .hero-container{
+            margin-top: 2rem;
+        }
+        .team-list{
+            margin-left: 2rem;
+        }
+        .timeline{
+    max-height: 300px;
+    min-height: 120px;
+    overflow-y: auto;
+    margin-bottom: 2rem;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+        }
+        .timeItem{
+            margin-left: 1rem;
+            margin-right: 1rem;
+            border: 2px solid grey;
+        }
