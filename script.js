@@ -124,6 +124,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Block F: Event Registry ---
   addTaskBtn.addEventListener("click", addTask)
 
+    themeToggle.addEventListener('click', () => {
+        console.log('Theme toggle logic is not implemented.');
+    });
+
+    // --- Block G: Application Entry Point ---
+    function init() {
+        console.log("Welcome to your task manager! 🎉");
+        fetchWeather("sdfasdfnsa,mn,mn.");
+        renderTasks();
+=======
   searchWeatherBtn.addEventListener("click", () => {
     const city = cityInput.value.trim()
     if (city) {
