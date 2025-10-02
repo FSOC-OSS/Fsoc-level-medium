@@ -57,6 +57,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+feature/move-completed-tasks-to-the-bottom
+    function addTask() {
+        const text = taskInput.value.trim();
+        if (text) {
+            tasks.push({ text: text, completed: false });
+            renderTasks();
+        }
+    }
+  //---Can write the the required functions here
+    function toggleTaskCompletion(index) {
+        tasks[index].completed = !tasks[index].completed;
+
+        // Move completed tasks to the bottom
+        tasks.sort((a, b) => a.completed - b.completed);
+
+        renderTasks();
+    }
+
 
 
   function enableInlineEdit(index, spanEl) {
