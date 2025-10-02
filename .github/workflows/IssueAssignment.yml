@@ -1,0 +1,99 @@
+name: Check User Assignments via Bot Command
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  check-bot-command:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+    env:
+      BACKEND_URL: https://pullquestgithubbackend-1.onrender.com
+    
+    steps:
+    - name: Check if comment mentions @pullquestai for assignment check
+      id: check_command
+      run: |
+        comment_body="${{ github.event.comment.body }}"
+        
+        # Check if comment mentions @pullquestai and asks about assignments
+        if [[ "$comment_body" == *"@pullquestai"* ]] && \
+           [[ "$comment_body" =~ (how many issues|tell me|show|check|what issues|list issues).*(assigned to|for) ]]; then
+          echo "trigger_action=true" >> $GITHUB_OUTPUT
+          echo "✅ Assignment check request detected!"
+          
+          # Extract username using regex - looking for @username pattern
+          username=$(echo "$comment_body" | grep -oP '(?:assigned to|for) @\K[a-zA-Z0-9_-]+' | head -1)
+          
+          if [[ -z "$username" ]]; then
+            echo "trigger_action=false" >> $GITHUB_OUTPUT
+            echo "❌ No username found in command"
+          else
+            echo "username=$username" >> $GITHUB_OUTPUT
+            echo "🔍 Username: $username"
+          fi
+        else
+          echo "trigger_action=false" >> $GITHUB_OUTPUT
+          echo "ℹ️  Not an assignment check request, skipping..."
+        fi
+    
+    - name: Debug – print extracted info
+      if: steps.check_command.outputs.trigger_action == 'true'
+      run: |
+        echo "🔍 Issue/PR #  : ${{ github.event.issue.number }}"
+        echo "🔍 Is PR?      : ${{ github.event.issue.pull_request != null }}"
+        echo "🔍 Requester   : ${{ github.event.comment.user.login }}"
+        echo "🔍 Username    : ${{ steps.check_command.outputs.username }}"
+        echo "🔍 Repository  : ${{ github.event.repository.full_name }}"
+        echo "🔍 Owner       : ${{ github.event.repository.owner.login }}"
+        echo "🔍 Repo Name   : ${{ github.event.repository.name }}"
+    
+    - name: Build payload ➜ POST to backend
+      if: steps.check_command.outputs.trigger_action == 'true'
+      run: |
+        ISSUE_NUMBER=${{ github.event.issue.number }}
+        USERNAME="${{ steps.check_command.outputs.username }}"
+        
+        # Assemble payload for assignment check
+        payload=$(jq -n \
+          --arg owner         "${{ github.event.repository.owner.login }}" \
+          --arg repo          "${{ github.event.repository.name }}" \
+          --arg assignedUser  "$USERNAME" \
+          --argjson issueNumber  "$ISSUE_NUMBER" \
+          '{
+            owner: $owner,
+            repo: $repo, 
+            issueNumber: $issueNumber,
+            assignedUser: $assignedUser
+          }')
+        
+        echo "📦 Payload:"
+        echo "$payload"
+        
+        response=$(curl --fail --show-error --silent \
+          -X POST "$BACKEND_URL/api/hactoberfest/IssueAssigned" \
+          -H "Content-Type: application/json" \
+          --data-raw "$payload" \
+          -w '\nHTTP %{http_code}\n' )
+        
+        echo "🔍 Response: $response"
+    
+    - name: React to comment
+      if: steps.check_command.outputs.trigger_action == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.reactions.createForIssueComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: context.payload.comment.id,
+            content: 'eyes'
+          });
+    
+    - name: Done
+      if: steps.check_command.outputs.trigger_action == 'true'
+      run: echo "✅ Assignment check completed and comment posted"
