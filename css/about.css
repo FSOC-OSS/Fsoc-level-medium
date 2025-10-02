@@ -1,55 +1,86 @@
-.hero{
-            display: flex;
-            gap: 12px;
-            flex-direction: row;
-        }
+/* Social Icons Styles */
+.social-icons {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 1rem;
+}
+.social-icons a {
+  color: #222;
+  font-size: 1.5rem;
+  transition: color 0.2s, transform 0.2s;
+}
+.social-icons a:hover {
+  color: #007bff;
+  transform: scale(1.2);
+}
+/* 3D effect for hero-item */
+.hero-item {
+  background: linear-gradient(135deg, #f8fafc 60%, #e0e7ef 100%);
+  border: 2px solid #000;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.22);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  transition: box-shadow 0.3s, transform 0.3s;
+  position: relative;
+  z-index: 1;
+}
+.hero-item:hover, .hero-item:focus {
+  box-shadow: 0 16px 32px rgba(0,0,0,0.28), 0 3px 12px rgba(0,0,0,0.32);
+  transform: perspective(400px) translateZ(24px) scale(1.03);
+}
+.hero {
+  display: flex;
+  gap: 12px;
+  flex-direction: row;
+}
 
 @media (max-width: 992px) {
-    .hero {
-        flex-direction: column;
-        align-items: center;
-    }
-    .hero-img {
-        order: -1;
-        margin-bottom: 2rem;
-    }
-    .hero-img img {
-            height: 100%;
-            width: 100%;
-            object-fit: contain;
-    }
-}
-        
-        .her-img{
-            max-height: 320px;
-            max-width: 320px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .about{
-            margin-left: 2%;
-            margin-right: 2%;
-            margin-top: 20px;
-        }
-        .hero-container{
-            margin-top: 2rem;
-        }
-        .team-list{
-            margin-left: 2rem;
-        }
-        .timeline{
-    max-height: 300px;
-    min-height: 120px;
-    overflow-y: auto;
+  .hero {
+    flex-direction: column;
+    align-items: center;
+  }
+  .hero-img {
+    order: -1;
     margin-bottom: 2rem;
+  }
+  .hero-img img {
+    height: 100%;
     width: 100%;
-    -webkit-overflow-scrolling: touch;
-        }
-        .timeItem{
-            margin-left: 1rem;
-            margin-right: 1rem;
-            border: 2px solid grey;
-        }
+    object-fit: contain;
+  }
+}
+
+.her-img {
+  max-height: 320px;
+  max-width: 320px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.about {
+  margin-left: 2%;
+  margin-right: 2%;
+  margin-top: 20px;
+}
+.hero-container {
+  margin-top: 2rem;
+}
+.team-list {
+  margin-left: 2rem;
+}
+.timeline {
+  max-height: 150px;
+  min-height: 120px;
+  overflow-y: auto;
+  margin-bottom: 2rem;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+.timeItem {
+  margin-left: 1rem;
+  margin-right: 1rem;
+  border: 2px solid grey;
+}
