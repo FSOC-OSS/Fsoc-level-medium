@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskInput = document.getElementById('task-input');
     const addTaskBtn = document.getElementById('add-task-btn');
     const taskList = document.getElementById('task-list');
-    const clearAllBtn = document.getElementById('clear-all-btn');
+    const clearAllBtn = document.getElementById('clear-all-btn'); 
     const cityInput = document.getElementById('city-input');
     const searchWeatherBtn = document.getElementById('search-weather-btn');
     const weatherInfo = document.getElementById('weather-info');
@@ -14,11 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let tasks = [];
 
     // --- Block C: Service Configuration ---
-
     
     const weatherApiKey = 'YOUR_API_KEY_HERE';
 
     // --- Block D: Module 1 Functions ---
+    
     function renderTasks() {
         taskList.innerHTML = '';
         tasks.forEach((task, index) => {
@@ -32,11 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const taskText = document.createElement('span');
             taskText.textContent = task.text;
+            if (task.completed) {
+                taskText.classList.add('completed'); 
+            }
+
+            taskText.addEventListener('dblclick', () => enableInlineEdit(index, taskText)); 
 
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
             deleteBtn.textContent = '🗑️';
-
+            deleteBtn.addEventListener('click', () => deleteTask(index)); 
 
             li.appendChild(checkbox);
             li.appendChild(taskText);
@@ -50,33 +55,80 @@ document.addEventListener('DOMContentLoaded', () => {
         if (text) {
             tasks.push({ text: text, completed: false });
             renderTasks();
+            taskInput.value = ''; 
         }
     }
-    //---Can write the the required functions here
+    
+    function toggleTaskCompletion(index) {
+        tasks[index].completed = !tasks[index].completed;
+        renderTasks();
+    }
+
+    function deleteTask(index) {
+        tasks.splice(index, 1);
+        renderTasks();
+    }
+    
+    function clearAllTasks() {
+        tasks = [];
+        renderTasks();
+    }
+
+    function enableInlineEdit(index, spanEl) {
+        const originalText = tasks[index].text;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = originalText;
+        input.className = 'task-edit-input';
+        input.setAttribute('aria-label', 'Edit task');
+
+        // keep layout stable
+        input.style.flex = '1 1 auto';
+        input.style.padding = '0.25rem 0.5rem';
+        input.style.fontSize = '1rem';
+
+        spanEl.replaceWith(input);
+        input.focus();
+        input.setSelectionRange(0, input.value.length);
+
+        const commit = () => {
+            const newText = input.value.trim();
+            tasks[index].text = newText || originalText; // revert if empty
+            renderTasks();
+        };
+
+        const cancel = () => {
+            renderTasks();
+        };
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') cancel();
+        });
+        input.addEventListener('blur', commit);
+    }
 
 
-
-
-
-
-
-    // --- Block E: Module 2 Functions sample data ---
+    // --- Block E: Module 2 Functions ---
     async function fetchWeather(city) {
-        const url = `https://api.openweathermap.org/data/2.5/weather?units=metric&q=${city}&appid=${weatherApiKey}`;
+        const url = `https://api.openweathermap.org/data/2.5/weather?units=metric&q=${city}&appid=${weatherApiKey}`; 
         try {
             const response = await fetch(url);
             if (!response.ok) {
+                if (response.status === 404) {
+                     weatherInfo.innerHTML = `<p class="error-text">
+                        ❌ Oops! "<strong>${city}</strong>" city not found.<br>
+                        🧐 Double-check the spelling or try a valid city name.<br>
+                        </p>`;
+                    return;
+                }
                 throw new Error(`Request failed (${response.status})`);
             }
             const data = await response.json();
             displayWeather(data);
         } catch (error) {
             console.error('Service call failed:', error);
-            weatherInfo.innerHTML = `<p class="error-text">
-            ❌ Oops! "<strong>${city}</strong>" city not found .<br>
-            🧐 Double-check the spelling or try a valid city name.<br>
-            </p>
-            `;
+            weatherInfo.innerHTML = `<p class="error-text">Weather data unavailable due to a service error.</p>`; 
         }
     }
 
@@ -92,26 +144,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-
     // --- Block F: Event Registry ---
+    taskInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addTask();
+    });
     addTaskBtn.addEventListener('click', addTask);
-    //clearAllBtn.addEventListener('click', clearAllTasks);
+    clearAllBtn.addEventListener('click', clearAllTasks); 
 
-    searchWeatherBtn.addEventListener('click', () => {
+    searchWeatherBtn.addEventListener('click', () => { 
         const city = cityInput.value.trim();
         if (city) {
             fetchWeather(city);
         }
     });
 
-    themeToggle.addEventListener('click', () => {
-        console.log('Theme toggle logic is not implemented.');
+    themeToggle.addEventListener('click', () => { 
+        document.body.classList.toggle('dark-theme');
+    });
+
+    
+    const navLinks = Array.from(document.querySelectorAll('.nav-link'));
+    navLinks.forEach((navLink) => {
+        navLink.addEventListener('click', (e) => {
+            navLinks.forEach((allNavLinks) => {
+                allNavLinks.classList.remove('active');
+            });
+            e.target.classList.add('active');
+        });
     });
 
     // --- Block G: Application Entry Point ---
     function init() {
-        //fetchWeather("sdfasdfnsa,mn,mn.");
+        
+        fetchWeather('London'); 
         renderTasks();
+        
+        copyrightYear.textContent = `© ${new Date().getFullYear()} Todo & Weather App`; 
     }
 
     init();
