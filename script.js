@@ -21,6 +21,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Block D: Module 1 Functions ---
     function renderTasks() {
+        incompleteTasks = [];
+        completedTasks = [];
+        tasks.forEach((task,index)=>{
+            if (task.completed){
+                completedTasks.push(task)
+            }
+            else{
+                incompleteTasks.push(task)
+            }
+        })
+        tasks = [];
+        tasks = [...incompleteTasks,...completedTasks]
+        
         taskList.innerHTML = '';
         tasks.forEach((task, index) => {
             const li = document.createElement('li');
@@ -138,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    init();
+    init();})
 
 document.addEventListener("DOMContentLoaded", () => {
     // --- Block A: Element Hooks ---
@@ -173,6 +186,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- Block E: Module 1 Functions (Task Management) ---
     function renderTasks() {
+        incompleteTasks = [];
+        completedTasks = [];
+        tasks.forEach((task,index)=>{
+            if (task.completed){
+                completedTasks.push(task)
+            }
+            else{
+                incompleteTasks.push(task)
+            }
+        })
+        tasks = [];
+        tasks = [...incompleteTasks,...completedTasks]
         taskList.innerHTML = "";
 
         tasks.forEach((task, index) => {
@@ -404,6 +429,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- Block E: Module 1 Functions (Task Management) ---
     function renderTasks() {
+        incompleteTasks = [];
+        completedTasks = [];
+        tasks.forEach((task,index)=>{
+            if (task.completed){
+                completedTasks.push(task)
+            }
+            else{
+                incompleteTasks.push(task)
+            }
+        })
+        tasks = [];
+        tasks = [...incompleteTasks,...completedTasks]
         taskList.innerHTML = "";
 
 
