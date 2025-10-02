@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Block C: Service Configuration ---
    
-    const weatherApiKey = 'YOUR_API_KEY_HERE';
+    const weatherApiKey = 'YOUR_OPEN_WEATHER_API_KEY_HERE';
     let debounceTimer = null;
 
     // --- Block D: Module 1 Functions ---
@@ -45,6 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function clearAllTasks() {
+        tasks = [];
+        renderTasks();
+    }
+
+
     function addTask() {
         const text = taskInput.value.trim();
         if (text) {
@@ -66,14 +72,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Block E: Module 2 Functions sample data ---
     async function fetchWeather(city) {
-        const url = `write something here `;
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${weatherApiKey}`;
         try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Request failed (${response.status})`);
-            }
-            const data = await response.json();
-            displayWeather(data);
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.cod === "404") {
+            weatherInfo.innerHTML = `<p class="error-text">City not found. Try again.</p>`;
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(`Request failed (${response.status})`);
+        }
+
+        displayWeather(data);
         } catch (error) {
             console.error('Service call failed:', error);
             weatherInfo.innerHTML = `<p class="error-text">Data unavailable.</p>`;
@@ -115,8 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Block G: Application Entry Point ---
     function init() {
-        fetchWeather("sdfasdfnsa,mn,mn.");
         renderTasks();
+        weatherInfo.innerHTML = `<p class="loading-text">Enter a city to see the weather...</p>`;
     }
 
     init();
