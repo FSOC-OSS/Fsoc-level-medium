@@ -477,3 +477,19 @@ footer {
         padding: 0 0.2rem;
     }
 }
+
+
+.task-due-date {
+    padding: 0.25rem 0.75rem;
+    background: rgba(79,140,255,0.1);
+    color: var(--primary-color);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.task-due-date.overdue {
+    background: rgba(233,69,96,0.1);
+    color: var(--accent);
+}
