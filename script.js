@@ -1,3 +1,50 @@
+
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Block A: Element Hooks ---
+    const taskInput = document.getElementById('task-input');
+    const addTaskBtn = document.getElementById('add-task-btn');
+    const taskList = document.getElementById('task-list');
+    const clearAllBtn = document.getElementById('clear-all-btn');
+    const cityInput = document.getElementById('city-input');
+    const searchWeatherBtn = document.getElementById('search-weather-btn');
+    const weatherInfo = document.getElementById('weather-info');
+    const themeToggle = document.getElementById('theme-toggle');
+    const copyrightYear = document.querySelector('footer p');
+    const errorMsg = document.getElementById('error-msg'); // new error placeholder
+
+    // --- Block B: Data Store ---
+    let tasks = [];
+
+    // --- Block C: Service Configuration ---
+   
+    const weatherApiKey = 'YOUR_API_KEY_HERE';
+
+    // --- Block D: Module 1 Functions ---
+    function renderTasks() {
+        taskList.innerHTML = '';
+        tasks.forEach((task, index) => {
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = task.completed;
+            checkbox.addEventListener('change', () => toggleTaskCompletion(index));
+            
+            const taskText = document.createElement('span');
+            taskText.textContent = task.text;
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = '🗑️';
+           
+
+            li.appendChild(checkbox);
+            li.appendChild(taskText);
+            li.appendChild(deleteBtn);
+            taskList.appendChild(li);
+        });
+=======
 document.addEventListener("DOMContentLoaded", () => {
   // --- Block A: Element Hooks ---
   const taskInput = document.getElementById("task-input")
@@ -57,6 +104,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+
+    function addTask() {
+        const text = taskInput.value.trim();
+        if (text) {
+            tasks.push({ text: text, completed: false });
+            renderTasks();
+            taskInput.value = '';
+            errorMsg.textContent = ''; // clear error
+        } else {
+            errorMsg.textContent = "The task is empty. Please enter a valid task.";
+        }
+    }
+     function toggleTaskCompletion(index) {
+        tasks[index].completed = !tasks[index].completed;
+        renderTasks();
+    }
+
+    function deleteTask(index) {
+        tasks.splice(index, 1);
+        renderTasks();
+    }
+
+    function clearAllTasks() {
+        tasks = [];
+        renderTasks();
+    }
+=======
 
 
   function enableInlineEdit(index, spanEl) {
