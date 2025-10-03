@@ -554,3 +554,70 @@ margin-left: 600px;
     margin-left: 300px;
     text-align: center;
 }
+.sort-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0.5rem;
+    background: rgba(79, 140, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    user-select: none;
+}
+
+.sort-column {
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    transition: background 0.2s;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.sort-column:hover {
+    background: rgba(79, 140, 255, 0.1);
+}
+
+.sort-column.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.sort-arrow {
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.sort-column.active .sort-arrow {
+    opacity: 1;
+}
+
+.col-title {
+    flex: 1;
+}
+
+.col-status {
+    flex: 0 0 150px;
+}
+
+.col-actions {
+    width: 12%;
+    text-align: right;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s, transform 0.2s;
+}
+
+.task-item.sorting {
+    transform: translateY(-2px);
+}

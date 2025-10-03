@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const taskList = document.getElementById("task-list");
   const clearAllBtn = document.getElementById("clear-all-btn");
   const filterBtns = document.querySelectorAll(".filter-btn");
+  const sortColumns = document.querySelectorAll(".sort-column");
+  const sortTasksBtn = document.getElementById("sort-tasks-btn");
 
   const cityInput = document.getElementById("city-input");
   const searchWeatherBtn = document.getElementById("search-weather-btn");
@@ -14,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
   let currentFilter = "all";
   let weatherSearchTimeout = null;
+  let currentSort = { column: null, ascending: true };
 
   const weatherApiKey = "YOUR_API_KEY_HERE";
   const DEBOUNCE_DELAY = 500;
@@ -27,6 +30,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function saveTasks() {
     localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+
+  // Added a function to sort the tasks of a given column
+  function sortTasks(column) {
+    if (column === 'none') return;
+
+    if (currentSort.column === column) {
+      currentSort.ascending = !currentSort.ascending;
+    } else {
+      currentSort.column = column;
+      currentSort.ascending = true;
+    }
+
+    tasks.sort((a, b) => {
+      let compareA, compareB;
+
+      if (column === 'title') {
+        compareA = a.text.toLowerCase();
+        compareB = b.text.toLowerCase();
+      } else if (column === 'status') {
+        compareA = a.completed ? 1 : 0;
+        compareB = b.completed ? 1 : 0;
+      }
+
+      if (compareA < compareB) return currentSort.ascending ? -1 : 1;
+      if (compareA > compareB) return currentSort.ascending ? 1 : -1;
+      return 0;
+    });
+
+    updateSortIndicators();
+    renderTasks();
+  }
+
+  // This function will update the arrows of column from up and down
+  function updateSortIndicators() {
+    sortColumns.forEach(col => {
+      const arrow = col.querySelector('.sort-arrow');
+      if (col.dataset.sort === currentSort.column) {
+        col.classList.add('active');
+        if (arrow) arrow.textContent = currentSort.ascending ? '▼' : '▲';
+      } else {
+        col.classList.remove('active');
+      }
+    });
   }
 
   function createTaskElement(task, index) {
@@ -56,18 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderTasks() {
-    incompleteTasks = [];
-    completedTasks = [];
-        tasks.forEach((task,index)=>{
-            if (task.completed){
-                completedTasks.push(task)
-            }
-            else{
-                incompleteTasks.push(task)
-            }
-        })
-        tasks = [];
-        tasks = [...incompleteTasks,...completedTasks]
     taskList.innerHTML = "";
 
     const filteredTasks = tasks.filter((task) => {
@@ -83,17 +118,6 @@ document.addEventListener("DOMContentLoaded", () => {
       empty.textContent = "No tasks here. Add a new one or change your filter!";
       taskList.appendChild(empty);
       return;
-    }
-
-    function addTask() {
-        const text = taskInput.value.trim();
-        // Removing the White Spaces around the text (excluding the middle one)
-        if (text) {
-            tasks.push({ text: text, completed: false });
-            // Checking if text is not Clear String.
-            renderTasks();
-            taskInput.value = "";
-        }
     }
     filteredTasks.forEach((task) => {
       const originalIndex = tasks.findIndex((t) => t === task);
@@ -265,6 +289,16 @@ document.addEventListener("DOMContentLoaded", () => {
       currentFilter = btn.dataset.filter;
       renderTasks();
     });
+  });
+
+  sortColumns.forEach((col) => {
+    col.addEventListener("click", () => {
+      sortTasks(col.dataset.sort);
+    });
+  });
+
+  sortTasksBtn.addEventListener("click", () => {
+    sortTasks('title');
   });
 
   cityInput.addEventListener("input", () =>
