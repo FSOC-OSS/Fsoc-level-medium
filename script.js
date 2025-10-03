@@ -171,7 +171,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         saveTasks();
         renderTasks();
-        showNotification("Tasks sorted alphabetically!");
+        toast.success("Tasks sorted alphabetically!");
+
     }
 
     // --- Weather Functions ---
@@ -360,7 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         URL.revokeObjectURL(link.href);
         updateLastBackupDate();
-        showNotification("Data exported successfully!");
+        toast.success("Data exported successfully!");
     }
 
     function importData(file) {
@@ -379,7 +380,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         tasks = importedData.tasks || [];
                         saveTasks();
                         renderTasks();
-                        showNotification("Data imported successfully!");
+                        toast.success("Data imported successfully!");
+
                     }
                 } else {
                     alert(
@@ -420,31 +422,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 tasks = [];
                 saveTasks();
                 renderTasks();
-                showNotification("All data cleared!");
+                toast.success("All data cleared!");
+
             }
         }
     }
 
-    function showNotification(message) {
-        const notification = document.createElement("div");
-        notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 4px;
-            z-index: 1000;
-            font-weight: 500;
-        `;
+   toast.success(message);  // For success messages
+toast.error(message);    // For error messages (where applicable)
+toast.info(message);     // For informational messages
+toast.warning(message);  // For warnings as needed
 
-        document.body.appendChild(notification);
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 3000);
-    }
 
     function updateLastBackupDate() {
         localStorage.setItem("lastBackupDate", new Date().toISOString());
