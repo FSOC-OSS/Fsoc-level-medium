@@ -251,15 +251,7 @@ button:hover,
     background: linear-gradient(90deg, var(--primary-hover-color) 60%, var(--primary-color) 100%);
     filter: brightness(1.08);
 }
-
-    transition: background-color 0.3s, transform 0.1s, filter 0.1s;
-
-
-button:hover,
-#add-task-btn:hover {
-    background: linear-gradient(90deg, var(--primary-hover-color) 60%, var(--primary-color) 100%);
-    filter: brightness(1.08);
-}
+ 
 
 
 button:active,
@@ -431,6 +423,25 @@ button:active,
     font-weight: 500;
 }
 
+.loading-text {
+    color: var(--secondary-color);
+    font-weight: 500;
+}
+
+.retry-btn {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(90deg, var(--primary-color) 60%, var(--primary-hover-color) 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.retry-btn:hover {
+    filter: brightness(1.06);
+}
+
 /* --- Footer --- */
 footer {
     text-align: center;
@@ -484,8 +495,7 @@ footer {
 
     }
 
-    }
-
+}
 
 @media (max-width: 600px) {
     nav {

@@ -46,8 +46,8 @@
             </div>
             <div class="task-filters">
                 <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="active">Active</button>
-                <button class="filter-btn" data-filter="completed">Completed</button>
+                <button class="filter-btn"  id="filter-active" data-filter="active">Active</button>
+                <button class="filter-btn" id="filter-completed" data-filter="completed">Completed</button>
             </div>
             <div class="sort-header">
                 <div class="sort-column col-title" data-sort="title">Title <span class="sort-arrow">▼</span></div>
@@ -65,8 +65,8 @@
             <div class="weather-search" style="justify-content: center;">
                 <button id="get-location-btn">Get My Location Weather</button>
             </div>
-            <div id="weather-info">
-                <p class="loading-text">Click "Get My Location Weather" to see your local weather...</p>
+            <div id="weather-info" role="status" aria-live="polite">
+                <p class="loading-text">Search for a city to see the weather...</p>
             </div>
         </section>
     </main>
