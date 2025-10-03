@@ -64,6 +64,18 @@
                         placeholder="Due date"
                         style="max-width: 160px;"
                     />
+                    <select id="priority-input" aria-label="Priority" title="Priority" style="max-width: 140px;">
+                        <option value="2" selected>Medium</option>
+                        <option value="1">High</option>
+                        <option value="3">Low</option>
+                    </select>
+                    <input
+                        type="text"
+                        id="tags-input"
+                        placeholder="tags (comma separated)"
+                        style="max-width: 220px;"
+                        aria-label="Task tags"
+                    />
                     <button id="add-task-btn">Add Task</button>
                 </div>
                 <div class="task-filters">
@@ -84,6 +96,24 @@
                     >
                         Completed
                     </button>
+                </div>
+                <div class="advanced-filters" aria-label="Advanced filters">
+                    <select id="priority-filter" aria-label="Filter by priority" title="Filter by priority">
+                        <option value="all" selected>Priority: All</option>
+                        <option value="high">Priority: High</option>
+                        <option value="medium">Priority: Medium</option>
+                        <option value="low">Priority: Low</option>
+                    </select>
+                    <input
+                        type="text"
+                        id="tags-filter"
+                        placeholder="Filter tags e.g. work,home"
+                        aria-label="Filter by tags"
+                    />
+                    <input type="date" id="due-from-filter" aria-label="Due from" title="Due from" />
+                    <span class="range-sep" aria-hidden="true">to</span>
+                    <input type="date" id="due-to-filter" aria-label="Due to" title="Due to" />
+                    <button id="clear-filters-btn" class="outline-btn" title="Clear all filters">Clear Filters</button>
                 </div>
                 <ul id="task-list"></ul>
                 <div class="task-actions">

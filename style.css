@@ -214,9 +214,20 @@ nav {
 
 .task-input-container {
     display: flex;
+    justify-content: center;
+    flex-wrap: wrap;      /* allow wrapping to new line */
     gap: 0.5rem;
     margin-bottom: 1.5rem;
 }
+
+.task-input-container input,
+.task-input-container select,
+.task-input-container button {
+    flex: 1 1 180px;       /* flexible but with a min size */
+    min-width: 140px;
+    max-width: 220px;
+}
+
 
 #task-input {
     flex-grow: 1;
@@ -640,6 +651,34 @@ margin-left: 600px;
     color: #dc3545;
     font-weight: bold;
 }
+
+.advanced-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-start; /* align nicely instead of forced center */
+  margin-bottom: 1rem;
+}
+
+.advanced-filters select,
+.advanced-filters input {
+  flex: 1 1 180px; /* flexible width but not too small */
+  min-width: 140px;
+  max-width: 220px;
+  padding: 0.6rem 1rem;
+}
+
+.advanced-filters .range-sep {
+  align-self: center;
+  margin: 0 0.5rem;
+  white-space: nowrap;
+}
+
+#clear-filters-btn {
+  flex: 1 1 120px;
+  min-width: 120px;
+}
+
 
 @keyframes overduePulse {
     from { background: #ffeaea; }
