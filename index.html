@@ -1,77 +1,179 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fsoc-Medium</title> 
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <style>
-        .task-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-            justify-content: center;
-        }
-        .task-actions button {
-            flex: 1;
-            padding: 0.7rem 2.2rem;
-        }
-        .task-actions #clear-all-btn {
-            margin: 0;
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <nav>
-            <div class="logo">Fsoc-Medium</div>
-            <ul class="nav-links">
-                <li><a href="#dashboard" class="nav-link active">Dashboard</a></li>
-                <li><a href="about.html" class="nav-link">About</a></li>
-                <li><a href="#contact" class="nav-link">Contact</a></li>
-            </ul>
-            <button id="theme-toggle" class="theme-btn">Toggle Theme</button>
-        </nav>
-    </header>
-    <main class="container">
-        <section class="card task-manager">
-            <h2>My Tasks</h2>
-            <div class="task-input-container">
-                <input type="text" id="task-input" placeholder="Ready to crush your next goal?">
-                <button id="add-task-btn">Add Task</button>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Fsoc-Medium</title>
+        <link rel="stylesheet" href="style.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <script
+            src="https://kit.fontawesome.com/a076d05399.js"
+            crossorigin="anonymous"
+        ></script>
+        <style>
+            .task-actions {
+                display: flex;
+                gap: 1rem;
+                margin-top: 1.5rem;
+                justify-content: center;
+            }
+            .task-actions button {
+                flex: 1;
+                padding: 0.7rem 2.2rem;
+            }
+            .task-actions #clear-all-btn {
+                margin: 0;
+            }
+            .data-management {
+                margin-top: 1.5rem;
+                padding: 1rem;
+                border-top: 1px solid var(--border-color);
+            }
+            .data-management h3 {
+                margin-bottom: 1rem;
+                color: var(--text-color);
+                font-size: 1.1rem;
+            }
+            .data-controls {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+            .data-controls button {
+                flex: 1;
+                min-width: 120px;
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+            .backup-reminder {
+                margin-top: 0.5rem;
+                font-size: 0.8rem;
+                color: var(--secondary-color);
+            }
+            #import-file {
+                display: none;
+            }
+            .import-label {
+                flex: 1;
+                min-width: 120px;
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+                background: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                text-align: center;
+                transition: background-color 0.3s;
+            }
+            .import-label:hover {
+                background: var(--primary-hover-color);
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <nav>
+                <div class="logo">Fsoc-Medium</div>
+                <ul class="nav-links">
+                    <li>
+                        <a href="#dashboard" class="nav-link active"
+                            >Dashboard</a
+                        >
+                    </li>
+                    <li><a href="about.html" class="nav-link">About</a></li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                </ul>
+                <button id="theme-toggle" class="theme-btn">
+                    Toggle Theme
+                </button>
+            </nav>
+        </header>
+        <main class="container">
+            <section class="card task-manager">
+                <h2>My Tasks</h2>
+                <div class="task-input-container">
+                    <input
+                        type="text"
+                        id="task-input"
+                        placeholder="Ready to crush your next goal?"
+                    />
+                    <button id="add-task-btn">Add Task</button>
+                </div>
+                <div class="task-filters">
+                    <button class="filter-btn active" data-filter="all">
+                        All
+                    </button>
+                    <button class="filter-btn" data-filter="active">
+                        Active
+                    </button>
+                    <button class="filter-btn" data-filter="completed">
+                        Completed
+                    </button>
+                </div>
+                <ul id="task-list"></ul>
+                <div class="task-actions">
+                    <button id="sort-tasks-btn">Sort A-Z</button>
+                    <button id="clear-all-btn">Clear All</button>
+                </div>
+                <div class="data-management">
+                    <h3>Data Management</h3>
+                    <div class="data-controls">
+                        <button id="export-data-btn">Export Data</button>
+                        <label for="import-file" class="import-label"
+                            >Import Data</label
+                        >
+                        <input type="file" id="import-file" accept=".json" />
+                        <button id="backup-reminder-btn">
+                            Backup Reminder
+                        </button>
+                    </div>
+                    <div class="backup-reminder">
+                        <span id="backup-status">Last backup: Never</span>
+                    </div>
+                </div>
+            </section>
+            <section class="card weather-widget">
+                <h2>Weather Report</h2>
+                <div class="weather-search">
+                    <input
+                        type="text"
+                        id="city-input"
+                        placeholder="Enter city name..."
+                    />
+                    <button id="search-weather-btn">Search</button>
+                </div>
+                <div
+                    class="weather-search"
+                    style="justify-content: center; margin-top: 1rem"
+                >
+                    <button id="get-location-btn">
+                        Get My Location Weather
+                    </button>
+                </div>
+                <div id="weather-info">
+                    <p class="loading-text">
+                        Enter a city name to see the weather...
+                    </p>
+                </div>
+            </section>
+        </main>
+        <footer>
+            <p>
+                &copy; <span id="year"></span> Fsoc-Medium Project. All rights
+                reserved.
+            </p>
+            <div class="footer-nav">
+                <a href="index.html">Dashboard</a> |
+                <a href="about.html">About</a> | <a href="#contact">Contact</a>
             </div>
-            <div class="task-filters">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="active">Active</button>
-                <button class="filter-btn" data-filter="completed">Completed</button>
-            </div>
-            <ul id="task-list">
-            </ul>
-            <div class="task-actions">
-                <button id="sort-tasks-btn">Sort A-Z</button>
-                <button id="clear-all-btn">Clear All</button>
-            </div>
-        </section>
-        <section class="card weather-widget">
-            <h2>Weather Report</h2>
-            <div class="weather-search" style="justify-content: center;">
-                <button id="get-location-btn">Get My Location Weather</button>
-            </div>
-            <div id="weather-info">
-                <p class="loading-text">Click "Get My Location Weather" to see your local weather...</p>
-            </div>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; <span id="year"></span> Fsoc-Medium Project. All rights reserved.</p>
-        <div class="footer-nav">
-             <a href="index.html">Dashboard</a> | <a href="about.html">About</a> | <a href="#contact">Contact</a>
-        </div>
-    </footer>
-    <script src="script.js"></script>
-</body>
+        </footer>
+        <script src="script.js"></script>
+    </body>
 </html>
