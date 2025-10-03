@@ -21,7 +21,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function debounce(func, delay) {
         return function (...args) {
             clearTimeout(weatherSearchTimeout);
-            weatherSearchTimeout = setTimeout(() => func.apply(this, args), delay);
+            weatherSearchTimeout = setTimeout(
+                () => func.apply(this, args),
+                delay,
+            );
         };
     }
 
@@ -129,13 +132,29 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderTasks() {
         let incompleteTasks = [];
         let completedTasks = [];
+
         tasks.forEach((task) => {
-            if (task.completed) completedTasks.push(task);
-            else incompleteTasks.push(task);
+            if (task.completed) {
+                completedTasks.push(task);
+            } else {
+                incompleteTasks.push(task);
+            }
         });
+
         tasks = [...incompleteTasks, ...completedTasks];
 
         taskList.innerHTML = "";
+
+        // Update filter button text with counts
+        const filterActiveBtn = document.querySelector("#filter-active");
+        const filterCompletedBtn = document.querySelector("#filter-completed");
+        if (filterActiveBtn) {
+            filterActiveBtn.innerHTML = `Active [${incompleteTasks.length}]`;
+        }
+        if (filterCompletedBtn) {
+            filterCompletedBtn.innerHTML = `Completed [${completedTasks.length}]`;
+        }
+
         const filteredTasks = tasks.filter((task) => {
             if (currentFilter === "active") return !task.completed;
             if (currentFilter === "completed") return task.completed;
@@ -146,7 +165,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const empty = document.createElement("li");
             empty.className = "task-empty-state";
             empty.setAttribute("aria-live", "polite");
-            empty.textContent = "No tasks here. Add a new one or change your filter!";
+            empty.textContent =
+                "No tasks here. Add a new one or change your filter!";
             taskList.appendChild(empty);
             return;
         }
@@ -241,11 +261,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function fetchWeather(city, attempt = 0) {
         if (!city) {
-            weatherInfo.innerHTML = '<p class="loading-text">Enter a city to see the weather...</p>';
+            weatherInfo.innerHTML =
+                '<p class="loading-text">Enter a city to see the weather...</p>';
             return;
         }
 
-        weatherInfo.innerHTML = '<p class="loading-text">Loading weather data...</p>';
+        weatherInfo.innerHTML =
+            '<p class="loading-text">Loading weather data...</p>';
 
         const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${weatherApiKey}&units=metric`;
 
@@ -275,7 +297,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (error.name === "AbortError") {
                 showWeatherError("Request timed out.", attempt);
             } else {
-                showWeatherError("Weather data currently unavailable.", attempt);
+                showWeatherError(
+                    "Weather data currently unavailable.",
+                    attempt,
+                );
             }
         }
     }
@@ -306,7 +331,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function fetchWeatherByCoords(lat, lon, attempt = 0) {
-        weatherInfo.innerHTML = '<p class="loading-text">Loading weather data...</p>';
+        weatherInfo.innerHTML =
+            '<p class="loading-text">Loading weather data...</p>';
         const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${weatherApiKey}&units=metric`;
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), WEATHER_TIMEOUT_MS);
@@ -327,11 +353,15 @@ document.addEventListener("DOMContentLoaded", () => {
             if (error.name === "AbortError") {
                 showWeatherError("Request timed out.", attempt);
             } else {
-                showWeatherError("Weather data currently unavailable.", attempt);
+                showWeatherError(
+                    "Weather data currently unavailable.",
+                    attempt,
+                );
             }
         }
     }
 
+    // Event Listeners
     taskList.addEventListener("click", (e) => {
         const action = e.target.dataset.action;
         if (!action) return;
@@ -342,7 +372,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     taskList.addEventListener("change", (e) => {
-        if (e.target.dataset.action === "toggle" && e.target.type === "checkbox") {
+        if (
+            e.target.dataset.action === "toggle" &&
+            e.target.type === "checkbox"
+        ) {
             const li = e.target.closest(".task-item");
             if (!li) return;
             toggleTaskCompletion(parseInt(li.dataset.index, 10));
@@ -370,30 +403,37 @@ document.addEventListener("DOMContentLoaded", () => {
         renderTasks();
     });
 
-    document.getElementById("export-data-btn").addEventListener("click", exportData);
+    document
+        .getElementById("export-data-btn")
+        .addEventListener("click", exportData);
 
     document.getElementById("import-data-btn").addEventListener("click", () => {
         document.getElementById("import-file").click();
     });
 
-    document.getElementById("import-file").addEventListener("change", importData);
+    document
+        .getElementById("import-file")
+        .addEventListener("change", importData);
 
-    document.getElementById("get-location-btn").addEventListener("click", () => {
-        if (navigator.geolocation) {
-            weatherInfo.innerHTML = '<p class="loading-text">Getting your location...</p>';
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    fetchWeatherByCoords(latitude, longitude);
-                },
-                () => {
-                    showWeatherError("Location access denied");
-                },
-            );
-        } else {
-            showWeatherError("Geolocation not supported");
-        }
-    });
+    document
+        .getElementById("get-location-btn")
+        .addEventListener("click", () => {
+            if (navigator.geolocation) {
+                weatherInfo.innerHTML =
+                    '<p class="loading-text">Getting your location...</p>';
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        fetchWeatherByCoords(latitude, longitude);
+                    },
+                    () => {
+                        showWeatherError("Location access denied");
+                    },
+                );
+            } else {
+                showWeatherError("Geolocation not supported");
+            }
+        });
 
     filterBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -405,7 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     themeToggle.addEventListener("click", () =>
-        document.body.classList.toggle("dark-theme")
+        document.body.classList.toggle("dark-theme"),
     );
 
     const navLinks = document.querySelectorAll(".nav-link");
