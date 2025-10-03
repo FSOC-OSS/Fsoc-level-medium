@@ -428,10 +428,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-   toast.success(message);  // For success messages
-toast.error(message);    // For error messages (where applicable)
-toast.info(message);     // For informational messages
-toast.warning(message);  // For warnings as needed
+   toast.success("Operation completed successfully!");  // For success messages
+toast.error("An error occurred. Please try again.");    // For error messages (where applicable)
+toast.info("This is an informational message.");     // For informational messages
+toast.warning("Please check your input data carefully.");  // For warnings as needed
 
 
     function updateLastBackupDate() {
