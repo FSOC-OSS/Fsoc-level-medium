@@ -399,13 +399,21 @@ document.addEventListener("DOMContentLoaded", () => {
       if (saved === "dark") document.body.classList.add("dark-theme");
 
       if (themeToggle) {
-        themeToggle.setAttribute("aria-pressed", document.body.classList.contains("dark-theme"));
-        themeToggle.addEventListener("click", () => {
-          const isDark = document.body.classList.toggle("dark-theme");
-          try {
-            localStorage.setItem("theme", isDark ? "dark" : "light");
-          } catch (e) {}
-          themeToggle.setAttribute("aria-pressed", isDark);
+        // display small icon to indicate state
+        const sun = '☀️';
+        const moon = '🌙';
+        const updateLabel = (isDark) => {
+          themeToggle.textContent = isDark ? sun + ' Light' : moon + ' Dark';
+          themeToggle.setAttribute('aria-pressed', isDark);
+        };
+
+        const isDarkNow = document.body.classList.contains('dark-theme');
+        updateLabel(isDarkNow);
+
+        themeToggle.addEventListener('click', () => {
+          const isDark = document.body.classList.toggle('dark-theme');
+          try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (e) {}
+          updateLabel(isDark);
         });
       }
     } catch (e) {
