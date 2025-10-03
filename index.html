@@ -29,6 +29,14 @@
             .task-actions #clear-all-btn {
                 margin: 0;
             }
+            .view-toggle {
+                display: flex;
+                justify-content: center;
+                margin: 1rem 0;
+            }
+            .view-toggle button {
+                margin: 0 0.5rem;
+            }
         </style>
     </head>
     <body>
@@ -48,7 +56,13 @@
                     Toggle Theme
                 </button>
             </nav>
+            <div class="view-toggle">
+                <button id="listViewBtn" aria-label="List View">List</button>
+                <button id="gridViewBtn" aria-label="Grid View">Grid</button>
+                <button id="compactViewBtn" aria-label="Compact View">Compact</button>
+            </div>
         </header>
+        <section class="item-container grid-view" id="itemContainer">
         <main class="container">
             <section class="card task-manager">
                 <h2>My Tasks</h2>
@@ -112,6 +126,7 @@
                         weather...
                     </p>
                 </div>
+            
             </section>
         </main>
         <footer>
