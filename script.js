@@ -4,9 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const taskList = document.getElementById("task-list");
     const clearAllBtn = document.getElementById("clear-all-btn");
     const filterBtns = document.querySelectorAll(".filter-btn");
-
-    const cityInput = document.getElementById("city-input");
-    const searchWeatherBtn = document.getElementById("search-weather-btn");
     const weatherInfo = document.getElementById("weather-info");
     const themeToggle = document.getElementById("theme-toggle");
     const yearSpan = document.getElementById("year");
@@ -21,7 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const WEATHER_TIMEOUT_MS = 8000;
     const MAX_RETRIES = 2;
 
-    // --- Utility Functions ---
     function debounce(func, delay) {
         return function (...args) {
             clearTimeout(weatherSearchTimeout);
@@ -159,16 +155,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        function addTask() {
-            const text = taskInput.value.trim();
-            // Removing the White Spaces around the text (excluding the middle one)
-            if (text) {
-                tasks.push({ text: text, completed: false });
-                // Checking if text is not Clear String.
-                renderTasks();
-                taskInput.value = "";
-            }
-        }
         filteredTasks.forEach((task) => {
             const originalIndex = tasks.findIndex((t) => t === task);
             taskList.appendChild(createTaskElement(task, originalIndex));
@@ -257,7 +243,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- Weather Functions ---
     async function fetchWeather(city, attempt = 0) {
         if (!city) {
             weatherInfo.innerHTML =
@@ -268,9 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
         weatherInfo.innerHTML =
             '<p class="loading-text">Loading weather data...</p>';
 
-        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
-            city,
-        )}&appid=${weatherApiKey}&units=metric`;
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${weatherApiKey}&units=metric`;
 
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), WEATHER_TIMEOUT_MS);
@@ -309,25 +292,26 @@ document.addEventListener("DOMContentLoaded", () => {
     function showWeatherError(message, attempt = 0) {
         const canRetry = attempt < MAX_RETRIES;
         weatherInfo.innerHTML = `
-      <p class="error-text">${message}</p>
-      ${canRetry ? '<button id="weather-retry-btn" class="retry-btn">Retry</button>' : ""}
-    `;
+            <p class="error-text">${message}</p>
+            ${canRetry ? '<button id="weather-retry-btn" class="retry-btn">Retry</button>' : ""}
+        `;
         const retryBtn = document.getElementById("weather-retry-btn");
-        if (retryBtn)
+        if (retryBtn) {
             retryBtn.addEventListener("click", () => {
-                fetchWeather(cityInput.value.trim(), attempt + 1);
+                fetchWeather("London", attempt + 1);
             });
+        }
     }
 
     function displayWeather(data) {
         const { name, main, weather } = data;
         const iconUrl = `https://openweathermap.org/img/wn/${weather[0].icon}@2x.png`;
         weatherInfo.innerHTML = `
-      <h3>${name}</h3>
-      <img src="${iconUrl}" alt="${weather[0].description}" class="weather-icon">
-      <p>Temperature: ${Math.round(main.temp)}°C</p>
-      <p>Condition: ${weather[0].main}</p>
-    `;
+            <h3>${name}</h3>
+            <img src="${iconUrl}" alt="${weather[0].description}" class="weather-icon">
+            <p>Temperature: ${Math.round(main.temp)}°C</p>
+            <p>Condition: ${weather[0].main}</p>
+        `;
     }
 
     async function fetchWeatherByCoords(lat, lon, attempt = 0) {
@@ -361,9 +345,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    const debouncedFetchWeather = debounce(fetchWeather, DEBOUNCE_DELAY);
-
-    // --- Event Listeners ---
     taskList.addEventListener("click", (e) => {
         const action = e.target.dataset.action;
         if (!action) return;
@@ -442,20 +423,6 @@ document.addEventListener("DOMContentLoaded", () => {
             currentFilter = btn.dataset.filter;
             renderTasks();
         });
-    });
-
-    cityInput.addEventListener("input", () =>
-        debouncedFetchWeather(cityInput.value.trim()),
-    );
-    searchWeatherBtn.addEventListener("click", () => {
-        clearTimeout(weatherSearchTimeout);
-        fetchWeather(cityInput.value.trim());
-    });
-    cityInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-            clearTimeout(weatherSearchTimeout);
-            fetchWeather(cityInput.value.trim());
-        }
     });
 
     themeToggle.addEventListener("click", () =>
