@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentFilter = "all";
     let weatherSearchTimeout = null;
     let lastBackupReminder = localStorage.getItem("lastBackupReminder") || 0;
+    let backupReminderShownThisSession = false;
 
     const weatherApiKey = "YOUR_API_KEY_HERE";
     const DEBOUNCE_DELAY = 500;
@@ -30,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function saveTasks() {
         localStorage.setItem("tasks", JSON.stringify(tasks));
-        checkBackupReminder();
+        // Only check backup reminder on app initialization, not on every save
     }
 
     function exportData() {
@@ -47,7 +48,12 @@ document.addEventListener("DOMContentLoaded", () => {
         link.download = `fsoc-tasks-${new Date().toISOString().split("T")[0]}.json`;
         link.click();
         URL.revokeObjectURL(url);
-        localStorage.setItem("lastBackupReminder", Date.now());
+
+        // Reset backup reminder timing when user exports data
+        const now = Date.now();
+        localStorage.setItem("lastBackupReminder", now);
+        lastBackupReminder = now;
+        backupReminderShownThisSession = true;
     }
 
     function importData(event) {
@@ -88,7 +94,18 @@ document.addEventListener("DOMContentLoaded", () => {
     function checkBackupReminder() {
         const now = Date.now();
         const sevenDays = 7 * 24 * 60 * 60 * 1000;
-        if (tasks.length > 0 && now - lastBackupReminder > sevenDays) {
+
+        // Only show reminder if:
+        // 1. There are tasks
+        // 2. It's been more than 7 days since last reminder
+        // 3. We haven't already shown the reminder this session
+        if (
+            tasks.length > 0 &&
+            now - lastBackupReminder > sevenDays &&
+            !backupReminderShownThisSession
+        ) {
+            backupReminderShownThisSession = true;
+
             setTimeout(() => {
                 if (
                     confirm(
@@ -98,6 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     exportData();
                 } else {
                     localStorage.setItem("lastBackupReminder", now);
+                    lastBackupReminder = now;
                 }
             }, 1000);
         }
@@ -460,6 +478,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderTasks();
         if (yearSpan) yearSpan.textContent = new Date().getFullYear();
         fetchWeather("London");
+        // Check backup reminder only once on app initialization
         checkBackupReminder();
     }
 
