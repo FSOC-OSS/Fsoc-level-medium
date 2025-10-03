@@ -319,6 +319,13 @@ button:active,
     padding: 1rem 0.5rem;
     border-bottom: 1px solid var(--border-color);
     transition: background 0.2s;
+    cursor: grab;
+}
+
+.task-item.dragging {
+    opacity: 0.5;
+    border: 2px dashed var(--primary-color);
+    background-color: var(--card-bg-color);
 }
 
 .task-item:last-child {
@@ -563,4 +570,14 @@ margin-left: 600px;
 .kohli {
     margin-left: 300px;
     text-align: center;
+}
+
+.task-item.dragging {
+  opacity: 0.5;
+  border: 2px dashed var(--primary-color);
+  background-color: var(--card-bg-color);
+}
+
+.task-item.drag-over {
+  border-top: 2px solid var(--primary-color);
 }

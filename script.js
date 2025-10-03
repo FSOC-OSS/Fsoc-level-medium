@@ -35,7 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function createTaskElement(task, index) {
     const li = document.createElement("li");
     li.className = "task-item";
-    li.dataset.index = index;
+    li.draggable = true;
+    li.dataset.index = index; // Set data-index for drag and drop
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
@@ -59,23 +60,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderTasks() {
-    incompleteTasks = [];
-    completedTasks = [];
-        tasks.forEach((task,index)=>{
-            if (task.completed){
-                completedTasks.push(task)
-            }
-            else{
-                incompleteTasks.push(task)
-            }
-        })
-        tasks = [];
+    let incompleteTasks = [];
+    let completedTasks = [];
+    tasks.forEach((task) => {
+      if (task.completed) {
+        completedTasks.push(task);
+      } else {
+        incompleteTasks.push(task);
+      }
+    });
+    tasks = [...incompleteTasks, ...completedTasks]; // Reorder tasks array
 
-        tasks = [...incompleteTasks,...completedTasks]
     taskList.innerHTML = "";
-    document.querySelector("#filter-active").innerHTML = `Active [${incompleteTasks.length}]`
-    document.querySelector("#filter-completed").innerHTML = `Completed [${completedTasks.length}]`
-        const filteredTasks = tasks.filter((task) => {
+    document.querySelector("#filter-active").innerHTML = `Active [${incompleteTasks.length}]`;
+    document.querySelector("#filter-completed").innerHTML = `Completed [${completedTasks.length}]`;
+
+    const filteredTasks = tasks.filter((task) => {
       if (currentFilter === "active") return !task.completed;
       if (currentFilter === "completed") return task.completed;
       return true;
@@ -90,19 +90,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    function addTask() {
-        const text = taskInput.value.trim();
-        // Removing the White Spaces around the text (excluding the middle one)
-        if (text) {
-            tasks.push({ text: text, completed: false });
-            // Checking if text is not Clear String.
-            renderTasks();
-            taskInput.value = "";
-        }
-    }
-    filteredTasks.forEach((task) => {
-      const originalIndex = tasks.findIndex((t) => t === task);
-      taskList.appendChild(createTaskElement(task, originalIndex));
+    filteredTasks.forEach((task, index) => {
+      taskList.appendChild(createTaskElement(task, index)); // Use the current index for data-index
     });
   }
 
@@ -113,21 +102,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const newTask = { text, completed: false };
     tasks.push(newTask);
 
-    if (currentFilter === "all" || currentFilter === "active") {
-      const emptyState = taskList.querySelector(".task-empty-state");
-      if (emptyState) emptyState.remove();
-      taskList.appendChild(createTaskElement(newTask, tasks.length - 1));
-    }
-
     saveTasks();
-    taskInput.value = ""; 
-    renderTasks();      
+    renderTasks();
+    taskInput.value = "";
   }
 
   function deleteTask(index) {
-    const taskElement = taskList.querySelector(`li[data-index='${index}']`);
-    if (taskElement) taskElement.remove();
-
     tasks.splice(index, 1);
     saveTasks();
     renderTasks();
@@ -141,19 +121,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function toggleTaskCompletion(index) {
     tasks[index].completed = !tasks[index].completed;
-    const taskElement = taskList.querySelector(`li[data-index='${index}']`);
-    if (taskElement) {
-      const taskText = taskElement.querySelector("span");
-      taskText.classList.toggle("completed", tasks[index].completed);
-
-      if (
-        (currentFilter === "active" && tasks[index].completed) ||
-        (currentFilter === "completed" && !tasks[index].completed)
-      ) {
-        taskElement.remove();
-        if (taskList.children.length === 0) renderTasks();
-      }
-    }
     saveTasks();
     renderTasks();
   }
@@ -228,7 +195,11 @@ document.addEventListener("DOMContentLoaded", () => {
       clearTimeout(id);
       if (error.name === "AbortError") {
         showWeatherError("Request timed out.", attempt);
-      } else {
+      }
+      else if (error.name === "TypeError") {
+        showWeatherError("Network error. Please check your connection.", attempt);
+      }
+      else {
         showWeatherError("Weather data currently unavailable.", attempt);
       }
     }
@@ -260,6 +231,60 @@ document.addEventListener("DOMContentLoaded", () => {
   const debouncedFetchWeather = debounce(fetchWeather, DEBOUNCE_DELAY);
 
   // --- Event Listeners ---
+  let draggedItem = null;
+
+  taskList.addEventListener("dragstart", (e) => {
+    draggedItem = e.target;
+    setTimeout(() => {
+      e.target.classList.add("dragging");
+    }, 0);
+  });
+
+  taskList.addEventListener("dragend", (e) => {
+    e.target.classList.remove("dragging");
+    draggedItem = null;
+  });
+
+  taskList.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(taskList, e.clientY);
+    const currentDraggable = document.querySelector(".dragging");
+    if (afterElement == null) {
+      taskList.appendChild(currentDraggable);
+    } else {
+      taskList.insertBefore(currentDraggable, afterElement);
+    }
+  });
+
+  taskList.addEventListener("drop", () => {
+    const newOrder = Array.from(taskList.children).map((li) => {
+      const index = parseInt(li.dataset.index, 10);
+      return tasks[index];
+    });
+    tasks = newOrder;
+    saveTasks();
+    renderTasks();
+  });
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [
+      ...container.querySelectorAll(".task-item:not(.dragging)"),
+    ];
+
+    return draggableElements.reduce(
+      (closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      },
+      { offset: Number.NEGATIVE_INFINITY }
+    ).element;
+  }
+
   taskList.addEventListener("click", (e) => {
     const action = e.target.dataset.action;
     if (!action) return;
@@ -326,6 +351,100 @@ document.addEventListener("DOMContentLoaded", () => {
       e.currentTarget.classList.add("active");
     });
   });
+
+  // --- Drag and Drop Event Listeners ---
+  let draggedTaskIndex = null;
+
+  taskList.addEventListener("dragstart", (e) => {
+    const li = e.target.closest(".task-item");
+    if (!li) return;
+    draggedTaskIndex = parseInt(li.dataset.index, 10);
+    e.dataTransfer.setData("text/plain", draggedTaskIndex);
+    li.classList.add("dragging");
+  });
+
+  taskList.addEventListener("dragover", (e) => {
+    e.preventDefault(); // Allow drop
+    const afterElement = getDragAfterElement(taskList, e.clientY);
+    const draggable = document.querySelector(".dragging");
+    if (draggable === null) return; // No item being dragged
+
+    // Remove drag-over from all elements first
+    taskList.querySelectorAll(".task-item").forEach(item => item.classList.remove("drag-over"));
+
+    if (afterElement == null) {
+      taskList.appendChild(draggable);
+    } else {
+      taskList.insertBefore(draggable, afterElement);
+    }
+    // Add drag-over to the element being hovered over, if it's not the dragged item itself
+    if (afterElement && afterElement !== draggable) {
+      afterElement.classList.add("drag-over");
+    } else if (afterElement === null && taskList.lastElementChild !== draggable) {
+      // If dropping at the end and it's not already the last element
+      // No specific element to add drag-over to, but we can add it to the last child if needed
+    }
+  });
+
+  taskList.addEventListener("dragleave", (e) => {
+    const li = e.target.closest(".task-item");
+    if (li) {
+      li.classList.remove("drag-over");
+    }
+  });
+
+  taskList.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const droppedIndex = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    const draggedElement = document.querySelector(".dragging");
+
+    if (!draggedElement) return; // No item was being dragged
+
+    const targetElement = e.target.closest(".task-item");
+    let targetIndex;
+
+    if (targetElement && targetElement !== draggedElement) {
+      targetIndex = parseInt(targetElement.dataset.index, 10);
+    } else if (!targetElement && taskList.children.length > 0) {
+      // Dropped outside any task item, but there are other tasks, append to end
+      targetIndex = tasks.length - 1;
+    } else if (!targetElement && taskList.children.length === 0) {
+      // Dropped into an empty list
+      targetIndex = 0;
+    } else {
+      // Dropped on itself or invalid target
+      taskList.querySelectorAll(".task-item").forEach(item => item.classList.remove("dragging", "drag-over"));
+      return;
+    }
+
+    // Reorder the tasks array
+    const [draggedTask] = tasks.splice(droppedIndex, 1);
+    tasks.splice(targetIndex, 0, draggedTask);
+
+    saveTasks();
+    renderTasks();
+  });
+
+  taskList.addEventListener("dragend", (e) => {
+    const allLis = taskList.querySelectorAll(".task-item");
+    allLis.forEach(li => li.classList.remove("dragging", "drag-over"));
+    draggedTaskIndex = null;
+    renderTasks(); // Re-render to ensure data-index attributes are correct
+  });
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll(".task-item:not(.dragging)")];
+
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
 
   function init() {
     renderTasks();
