@@ -250,9 +250,12 @@ button:hover,
 #add-task-btn:hover {
     background: linear-gradient(90deg, var(--primary-hover-color) 60%, var(--primary-color) 100%);
     filter: brightness(1.08);
+    
 }
 
-    transition: background-color 0.3s, transform 0.1s, filter 0.1s;
+
+  
+
 
 
 button:hover,
@@ -384,9 +387,16 @@ button:active,
 
 /* --- Weather Widget --- */
 .weather-search {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Optional: centers vertically if needed */
+  margin: 20px 0;       /* Optional: adds spacing */
+}
+
+#get-location-btn {
+  font-size: 16px;
+  padding: 12px 24px;
+  cursor: pointer;
 }
 
 #city-input {
@@ -427,7 +437,7 @@ button:active,
 }
 
 .error-text {
-    color: #dc3545;
+    color: #007bff;
     font-weight: 500;
 }
 
