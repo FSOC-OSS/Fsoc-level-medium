@@ -8,7 +8,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> </head>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        .task-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            justify-content: center;
+        }
+
+        .task-actions button {
+            flex: 1;
+            padding: 0.7rem 2.2rem;
+        }
+
+        .task-actions #clear-all-btn {
+            margin: 0;
+        }
+    </style>
+
+</head>
 <body>
     <header>
         <nav>
@@ -35,8 +54,11 @@
                 <button class="filter-btn" data-filter="completed">Completed</button>
             </div>
             <ul id="task-list">
-                </ul>
-             <button id="clear-all-btn">Clear All</button>
+            </ul>
+            <div class="task-actions">
+                <button id="sort-tasks-btn">Sort A-Z</button>
+                <button id="clear-all-btn">Clear All</button>
+            </div>
         </section>
 
         <section class="card weather-widget">
