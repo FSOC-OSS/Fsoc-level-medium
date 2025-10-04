@@ -684,3 +684,21 @@ margin-left: 600px;
     from { background: #ffeaea; }
     to { background: #fff5f5; }
 }
+
+.input-error {
+  color: #dc3545;
+  font-size: 0.95rem;
+  margin-left: 0.5rem;
+  display: block;
+  font-weight: 500;
+}
+
+.input-invalid {
+  border: 2px solid #dc3545 !important;
+  background: #ffeaea !important;
+}
+
+.input-valid {
+  border: 2px solid #28a745 !important;
+  background: #e6fff2 !important;
+}

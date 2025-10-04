@@ -17,6 +17,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const dueToFilter = document.getElementById("due-to-filter")
   const clearFiltersBtn = document.getElementById("clear-filters-btn")
 
+  // --- Export/Import Setup ---
+  const exportBtn = document.getElementById("export-data-btn");
+  const importBtn = document.getElementById("import-data-btn");
+  const importFileInput = document.getElementById("import-file-input");
+
   // --- Weather Widget Setup ---
   const cityInput = document.getElementById("city-input")
   const searchWeatherBtn = document.getElementById("search-weather-btn")
@@ -49,6 +54,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let weatherSearchTimeout // Declare the variable here
 
+  // --- Validation State ---
+  // Add error containers only if not present
+  let taskInputError = taskInput.parentNode.querySelector(".input-error");
+  if (!taskInputError) {
+    taskInputError = document.createElement("span");
+    taskInputError.className = "input-error";
+    taskInputError.setAttribute("aria-live", "polite");
+    taskInputError.style.display = "none";
+    taskInput.parentNode.insertBefore(taskInputError, taskInput.nextSibling);
+  }
+
+  let dueDateInputError = dueDateInput.parentNode.querySelector(".input-error");
+  if (!dueDateInputError) {
+    dueDateInputError = document.createElement("span");
+    dueDateInputError.className = "input-error";
+    dueDateInputError.setAttribute("aria-live", "polite");
+    dueDateInputError.style.display = "none";
+    dueDateInput.parentNode.insertBefore(dueDateInputError, dueDateInput.nextSibling);
+  }
+
   // --- Utility Functions ---
   function debounce(func, delay) {
     return function (...args) {
@@ -63,6 +88,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function saveSortState() {
     localStorage.setItem("sortState", JSON.stringify(sortState))
+  }
+
+  // --- Validation Functions ---
+  function validateTaskInput() {
+    const value = taskInput.value.trim();
+    if (!value) {
+      taskInput.classList.add("input-invalid");
+      taskInput.classList.remove("input-valid");
+      taskInputError.textContent = "Task title is required.";
+      taskInputError.style.display = "block";
+      return false;
+    }
+    if (value.length < 3) {
+      taskInput.classList.add("input-invalid");
+      taskInput.classList.remove("input-valid");
+      taskInputError.textContent = "Task title must be at least 3 characters.";
+      taskInputError.style.display = "block";
+      return false;
+    }
+    taskInput.classList.remove("input-invalid");
+    taskInput.classList.add("input-valid");
+    taskInputError.textContent = "";
+    taskInputError.style.display = "none";
+    return true;
+  }
+
+  function validateDueDateInput() {
+    const value = dueDateInput.value;
+    if (value) {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      if (selectedDate < today) {
+        dueDateInput.classList.add("input-invalid");
+        dueDateInput.classList.remove("input-valid");
+        dueDateInputError.textContent = "Due date cannot be in the past.";
+        dueDateInputError.style.display = "block";
+        return false;
+      }
+    }
+    dueDateInput.classList.remove("input-invalid");
+    if (value) dueDateInput.classList.add("input-valid");
+    dueDateInputError.textContent = "";
+    dueDateInputError.style.display = "none";
+    return true;
+  }
+
+  function validateForm() {
+    const validTask = validateTaskInput();
+    const validDate = validateDueDateInput();
+    return validTask && validDate;
   }
 
   // --- Task Data Model ---
@@ -95,6 +171,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (priorityInput) priorityInput.value = "2"
     if (tagsInput) tagsInput.value = ""
     renderTasks()
+  }
+
+  function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+
+  function saveSortState() {
+    localStorage.setItem("sortState", JSON.stringify(sortState));
   }
 
   function deleteTask(index) {
@@ -350,6 +434,41 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
+  // --- Export/Import Functions ---
+  function exportTasks() {
+    const dataStr = JSON.stringify(tasks, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "tasks-export.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function importTasksFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if (Array.isArray(imported)) {
+          tasks = imported;
+          saveTasks();
+          renderTasks();
+          alert("Tasks imported successfully!");
+        } else {
+          alert("Invalid file format.");
+        }
+      } catch (err) {
+        alert("Error importing tasks: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
   // --- Weather Functions ---
   async function fetchWeather(city, attempt = 0) {
     if (!city) {
@@ -544,6 +663,20 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
+  // --- Export/Import Events ---
+  if (exportBtn) {
+    exportBtn.addEventListener("click", exportTasks);
+  }
+  if (importBtn && importFileInput) {
+    importBtn.addEventListener("click", () => importFileInput.click());
+    importFileInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) {
+        importTasksFromFile(e.target.files[0]);
+        importFileInput.value = "";
+      }
+    });
+  }
+
   // --- Theme Toggle ---
   if (themeToggle) {
     themeToggle.addEventListener("click", () => {
@@ -554,7 +687,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Sort Button ---
   if (sortTasksBtn) {
     sortTasksBtn.addEventListener("click", () => {
-      // Toggle between title asc/desc for demo
       if (sortState.key === "title") {
         sortState.direction = sortState.direction === "asc" ? "desc" : "asc"
       } else {
