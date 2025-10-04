@@ -187,6 +187,115 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+  let selectedTaskIndex = -1;
+
+function focusTaskInput() {
+    document.getElementById('task-input').focus();
+}
+
+function showShortcutModal() {
+    document.getElementById('shortcut-modal').style.display = 'flex';
+}
+
+function hideShortcutModal() {
+    document.getElementById('shortcut-modal').style.display = 'none';
+}
+
+function selectTask(index) {
+    const tasks = document.querySelectorAll('#task-list li');
+    tasks.forEach((task, i) => {
+        task.classList.toggle('selected', i === index);
+    });
+    selectedTaskIndex = index;
+}
+
+function moveSelection(offset) {
+    const tasks = document.querySelectorAll('#task-list li');
+    if (tasks.length === 0) return;
+    let newIndex = selectedTaskIndex + offset;
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= tasks.length) newIndex = tasks.length - 1;
+    selectTask(newIndex);
+    tasks[newIndex].scrollIntoView({ block: 'nearest' });
+}
+
+document.addEventListener('keydown', function(e) {
+    // Ignore shortcuts if modal is open
+    if (document.getElementById('shortcut-modal').style.display === 'flex') {
+        if (e.key === 'Escape') hideShortcutModal();
+        return;
+    }
+
+    // Show shortcut modal
+    if (e.key === '?') {
+        showShortcutModal();
+        e.preventDefault();
+        return;
+    }
+
+    // Focus task input
+    if (e.key === '/') {
+        focusTaskInput();
+        e.preventDefault();
+        return;
+    }
+
+    // Add task
+    if ((e.ctrlKey && e.key === 'n') || 
+        (document.activeElement.id === 'task-input' && e.key === 'Enter')) {
+        document.getElementById('add-task-btn').click();
+        e.preventDefault();
+        return;
+    }
+
+    // Sort tasks
+    if (e.ctrlKey && e.key === 's') {
+        document.getElementById('sort-tasks-btn').click();
+        e.preventDefault();
+        return;
+    }
+
+    // Clear all tasks
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c') {
+        document.getElementById('clear-all-btn').click();
+        e.preventDefault();
+        return;
+    }
+
+    // Navigate tasks
+    if (e.key === 'ArrowDown') {
+        moveSelection(1);
+        e.preventDefault();
+        return;
+    }
+    if (e.key === 'ArrowUp') {
+        moveSelection(-1);
+        e.preventDefault();
+        return;
+    }
+
+    // Complete selected task
+    if (e.ctrlKey && e.key === 'Enter' && selectedTaskIndex !== -1) {
+        const tasks = document.querySelectorAll('#task-list li');
+        const completeBtn = tasks[selectedTaskIndex]?.querySelector('.complete-btn');
+        completeBtn?.click();
+        e.preventDefault();
+        return;
+    }
+
+    // Delete selected task
+    if (e.key === 'Delete' && selectedTaskIndex !== -1) {
+        const tasks = document.querySelectorAll('#task-list li');
+        const deleteBtn = tasks[selectedTaskIndex]?.querySelector('.delete-btn');
+        deleteBtn?.click();
+        e.preventDefault();
+        return;
+    }
+});
+
+document.getElementById('close-shortcut-modal').addEventListener('click', hideShortcutModal);
+
+// Add sele
 
   // --- Weather Functions ---
   async function fetchWeather(city, attempt = 0) {

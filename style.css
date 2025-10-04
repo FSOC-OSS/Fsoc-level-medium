@@ -564,3 +564,37 @@ margin-left: 600px;
     margin-left: 300px;
     text-align: center;
 }
+.shortcut-hint {
+    font-size: 0.8em;
+    color: #888;
+    margin-left: 0.5em;
+}
+.modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    min-width: 300px;
+    max-width: 90vw;
+}
+.modal-content h3 {
+    margin-top: 0;
+}
+.modal-content ul {
+    list-style: none;
+    padding: 0;
+}
+.modal-content li {
+    margin-bottom: 0.5em;
+    #task-list li.selected {
+    outline: 2px solid #007bff;
+    background: #e6f0ff;
+}
