@@ -82,6 +82,43 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function escRegex(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function highlightMatch(text, query) {
+    if (!query) return text;
+    const r = new RegExp(`(${escRegex(query)})`, "gi");
+    return text.replace(r, "<mark>$1</mark>");
+  }
+
+  function levenshtein(a, b) {
+    const al = a.length, bl = b.length;
+    if (!al) return bl;
+    if (!bl) return al;
+    const v0 = Array.from({ length: bl + 1 }, (_, i) => i);
+    const v1 = new Array(bl + 1);
+    for (let i = 1; i <= al; i++) {
+      v1[0] = i;
+      for (let j = 1; j <= bl; j++) {
+        const cost = a[i - 1].toLowerCase() === b[j - 1].toLowerCase() ? 0 : 1;
+        v1[j] = Math.min(v1[j - 1] + 1, v0[j] + 1, v0[j - 1] + cost);
+      }
+      for (let j = 0; j <= bl; j++) v0[j] = v1[j];
+    }
+    return v1[bl];
+  }
+
+  function fuzzyMatch(text, query) {
+    if (!query) return false;
+    const t = (text || "").toLowerCase();
+    const q = query.toLowerCase();
+    if (q.length <= 1) return t.includes(q);
+    if (t.includes(q)) return true;
+    const threshold = Math.max(1, Math.floor(q.length * 0.28));
+    return levenshtein(t, q) <= threshold;
+  }
+
   function saveTasks() {
     localStorage.setItem("tasks", JSON.stringify(tasks))
   }
@@ -297,6 +334,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
       return true
     })
+
+    const q = taskSearch ? taskSearch.value.trim() : "";
+    const matches = q
+      ? filteredTasks.filter((t) =>
+          fuzzyMatch(t.text, q) || fuzzyMatch(t.description || "", q) || (Array.isArray(t.tags) && t.tags.some(tag => fuzzyMatch(tag, q)))
+        )
+      : [];
+    if (searchCount) searchCount.textContent = q ? `${matches.length} match(es)` : "";
+    if (q && searchBtn && searchBtn.dataset.active === "true") filteredTasks = matches;
 
     // Sorting
     filteredTasks = sortTasks(filteredTasks)
@@ -662,6 +708,45 @@ document.addEventListener("DOMContentLoaded", () => {
       renderTasks()
     })
   }
+
+  if (taskSearch) {
+    taskSearch.addEventListener("input", () => {
+      renderTasks();
+    });
+  }
+
+  if (searchBtn) {
+    searchBtn.addEventListener("click", () => {
+      const isActive = searchBtn.dataset.active === "true";
+      searchBtn.dataset.active = isActive ? "false" : "true";
+      searchBtn.classList.toggle("active", !isActive);
+      renderTasks();
+    });
+  }
+
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", () => {
+      if (taskSearch) taskSearch.value = "";
+      if (searchBtn) {
+        searchBtn.dataset.active = "false";
+        searchBtn.classList.remove("active");
+      }
+      if (searchCount) searchCount.textContent = "";
+      renderTasks();
+    });
+  }
+
+  window.addEventListener("keydown", (e) => {
+    const isMac = navigator.platform.toUpperCase().includes('MAC');
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+    if (mod && e.key.toLowerCase() === 'f') {
+      if (taskSearch) {
+        e.preventDefault();
+        taskSearch.focus();
+        taskSearch.select();
+      }
+    }
+  });
 
   // --- Export/Import Events ---
   if (exportBtn) {
