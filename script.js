@@ -348,4 +348,28 @@ document.addEventListener("DOMContentLoaded", () => {
     init();
 });
 
+function showToast({ type = "info", message = "", duration = 5000, position = "top-right" }) {
+  let container = document.querySelector(`#toast-container.${position}`);
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast-container";
+    container.className = position;
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    <span>${message}</span>
+    <button onclick="this.parentElement.remove()">×</button>
+    <div class="progress" style="animation-duration:${duration}ms"></div>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, duration);
+}
+
 
