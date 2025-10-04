@@ -344,6 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
         getLocationWeather();
         checkBackupReminder();
     }
+    
 
     init();
 });
