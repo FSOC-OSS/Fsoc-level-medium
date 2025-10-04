@@ -2,11 +2,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Task Manager Setup ---
   const taskInput = document.getElementById("task-input");
   const dueDateInput = document.getElementById("due-date-input");
+  const prioritySelect = document.getElementById("priority-select");
   const addTaskBtn = document.getElementById("add-task-btn");
   const taskList = document.getElementById("task-list");
   const clearAllBtn = document.getElementById("clear-all-btn");
   const filterBtns = document.querySelectorAll(".filter-btn");
   const sortTasksBtn = document.getElementById("sort-tasks-btn");
+  const sortPriorityBtn = document.getElementById("sort-priority-btn");
+  const sortDateBtn = document.getElementById("sort-date-btn");
   const taskSearch = document.getElementById("task-search");
   const searchBtn = document.getElementById("search-btn");
   const clearSearchBtn = document.getElementById("clear-search-btn");
@@ -29,6 +32,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let tagRegistry = JSON.parse(localStorage.getItem("tags")) || {};
   let activeTagFilter = null;
   let currentFilter = "all";
+  let sortType = "none";
+  let currentWeatherController = null;
 
   // --- Sorting State ---
   let sortState = JSON.parse(localStorage.getItem("sortState")) || {
@@ -43,7 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const MAX_RETRIES = 3;
 
   // --- Validation State ---
-  // Add error containers only if not present
   let taskInputError = taskInput.parentNode.querySelector(".input-error");
   if (!taskInputError) {
     taskInputError = document.createElement("span");
@@ -61,18 +65,13 @@ document.addEventListener("DOMContentLoaded", () => {
     dueDateInputError.style.display = "none";
     dueDateInput.parentNode.insertBefore(dueDateInputError, dueDateInput.nextSibling);
   }
-  
-  // Keep reference to the currently active fetch's AbortController so we can cancel it
-  let currentWeatherController = null;
 
   // --- Utility Functions ---
   function debounce(func, delay) {
     let timer = null;
     return function (...args) {
       if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        func.apply(this, args);
-      }, delay);
+      timer = setTimeout(() => func.apply(this, args), delay);
     };
   }
 
@@ -191,13 +190,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return validTask && validDate;
   }
 
-
   function updateTaskProgressBar() {
     const total = tasks.length;
     const completed = tasks.filter(t => t.completed).length;
     const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
 
- 
     const bar = document.getElementById("task-progress-bar");
     if (bar) {
       bar.style.width = percent + "%";
@@ -240,23 +237,25 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!validateForm()) return;
     const text = taskInput.value.trim();
     const dueDate = dueDateInput.value ? dueDateInput.value : null;
+    const priority = prioritySelect ? parseInt(prioritySelect.value) : 2;
     const rawTags = document.getElementById('task-tags') ? document.getElementById('task-tags').value : '';
     const cleaned = sanitizeTagInputValue(rawTags);
     const tags = cleaned.split(/\s+/).filter(Boolean);
     tags.forEach(tag => { tagRegistry[tag] = (tagRegistry[tag] || 0) + 1; });
     saveTags();
+    
     const newTask = {
       text,
       description: '',
       tags,
       completed: false,
       created: Date.now(),
-      priority: 2,
+      priority,
       dueDate
     };
     tasks.push(newTask);
     saveTasks();
-    // if a tag filter is active but the new task doesn't match it, clear the filter so the task is visible
+    
     if (activeTagFilter) {
       const matchesFilter = Array.isArray(newTask.tags) && newTask.tags.includes(activeTagFilter);
       if (!matchesFilter) {
@@ -265,8 +264,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (sel) sel.value = '';
       }
     }
+    
     taskInput.value = "";
     dueDateInput.value = "";
+    if (prioritySelect) prioritySelect.value = "2";
     if (document.getElementById('task-tags')) document.getElementById('task-tags').value = '';
     taskInput.classList.remove("input-valid");
     dueDateInput.classList.remove("input-valid");
@@ -276,7 +277,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function deleteTask(index) {
-    // decrement tag counts for removed task
     const t = tasks[index];
     if (t && Array.isArray(t.tags)) {
       t.tags.forEach(tag => {
@@ -289,16 +289,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     tasks.splice(index, 1);
     saveTasks();
-    
     rebuildTagRegistryFromTasks();
-    // update popular tags/dropdown then re-render list
     renderPopularTags();
     renderTasks();
     updateTaskProgressBar();
   }
 
   function clearAllTasks() {
-    // clear tasks and reset tag registry
     tasks = [];
     tagRegistry = {};
     saveTags();
@@ -313,6 +310,21 @@ document.addEventListener("DOMContentLoaded", () => {
     saveTasks();
     renderTasks();
     updateTaskProgressBar();
+  }
+
+  function changePriority(index, newPriority) {
+    tasks[index].priority = parseInt(newPriority);
+    saveTasks();
+    renderTasks();
+  }
+
+  function getPriorityBadge(priority) {
+    const badges = {
+      1: '<span class="priority-badge priority-high">High</span>',
+      2: '<span class="priority-badge priority-medium">Medium</span>',
+      3: '<span class="priority-badge priority-low">Low</span>'
+    };
+    return badges[priority] || badges[2];
   }
 
   function enableInlineEdit(index, spanEl) {
@@ -349,7 +361,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Sorting ---
-  function sortTasks(tasksArr) {
+  function sortTasksByType(tasksArr) {
+    let sorted = [...tasksArr];
+    
+    if (sortType === "priority") {
+      sorted.sort((a, b) => a.priority - b.priority);
+    } else if (sortType === "date") {
+      sorted.sort((a, b) => b.created - a.created);
+    } else if (sortType === "title") {
+      sorted.sort((a, b) => 
+        sortState.direction === "asc"
+          ? a.text.localeCompare(b.text)
+          : b.text.localeCompare(a.text)
+      );
+    }
+    
+    return sorted;
+  }
+
+  function sortTasksByColumn(tasksArr) {
     let sorted = [...tasksArr];
     switch (sortState.key) {
       case "title":
@@ -408,6 +438,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let filteredTasks = tasks.filter((task) => {
       if (currentFilter === "active") return !task.completed;
       if (currentFilter === "completed") return task.completed;
+      if (currentFilter === "priority-1") return task.priority === 1;
+      if (currentFilter === "priority-2") return task.priority === 2;
+      if (currentFilter === "priority-3") return task.priority === 3;
       if (activeTagFilter) return task.tags && task.tags.includes(activeTagFilter);
       return true;
     });
@@ -422,7 +455,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (q && searchBtn && searchBtn.dataset.active === "true") filteredTasks = matches;
 
     // Sorting
-    filteredTasks = sortTasks(filteredTasks);
+    if (sortType !== "none") {
+      filteredTasks = sortTasksByType(filteredTasks);
+    } else {
+      filteredTasks = sortTasksByColumn(filteredTasks);
+    }
 
     taskList.innerHTML = "";
     const filterActiveBtn = document.querySelector("#filter-active");
@@ -482,7 +519,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // Title
+      // Title with checkbox
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = task.completed;
@@ -498,11 +535,40 @@ document.addEventListener("DOMContentLoaded", () => {
       const titleCell = document.createElement("span");
       titleCell.appendChild(checkbox);
       titleCell.appendChild(taskText);
+      titleCell.innerHTML += getPriorityBadge(task.priority);
 
       // Date Added
       const dateCell = document.createElement("span");
       const dateObj = new Date(task.created);
       dateCell.textContent = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Due Date
+      const dueDateCell = document.createElement("span");
+      dueDateCell.textContent = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "-";
+      if (isOverdue) dueDateCell.classList.add("overdue-date");
+
+      // Priority Dropdown
+      const priorityDropdown = document.createElement("select");
+      priorityDropdown.className = "priority-dropdown";
+      priorityDropdown.innerHTML = `
+        <option value="1" ${task.priority === 1 ? "selected" : ""}>🔴 High</option>
+        <option value="2" ${task.priority === 2 ? "selected" : ""}>🟡 Medium</option>
+        <option value="3" ${task.priority === 3 ? "selected" : ""}>🟢 Low</option>
+      `;
+      priorityDropdown.addEventListener("change", (e) => {
+        changePriority(originalIndex, e.target.value);
+      });
+
+      // Status
+      const statusCell = document.createElement("span");
+      statusCell.textContent = task.completed ? "Done" : "Active";
+      statusCell.style.color = task.completed ? "var(--completed-color)" : "var(--primary-color)";
+
+      // Delete
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.textContent = "🗑️";
+      deleteBtn.dataset.action = "delete";
 
       // Tags badges
       const tagsCell = document.createElement('span');
@@ -524,30 +590,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
 
-      // Delete
-      const dueDateCell = document.createElement("span");
-      dueDateCell.textContent = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "-";
-      if (isOverdue) dueDateCell.classList.add("overdue-date");
-
-  // Priority
-  // create priority cell element
-  const priorityCell = document.createElement("span");
-  let priorityText = "Medium";
-  if (task.priority === 1) priorityText = "High";
-  if (task.priority === 3) priorityText = "Low";
-  priorityCell.textContent = priorityText;
-
-      // Status
-      const statusCell = document.createElement("span");
-      statusCell.textContent = task.completed ? "Done" : "Active";
-      statusCell.style.color = task.completed ? "var(--completed-color)" : "var(--primary-color)";
-
-      // Delete
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "delete-btn";
-      deleteBtn.textContent = "🗑️";
-      deleteBtn.dataset.action = "delete";
-
       if (task.description) {
         const descSpan = document.createElement("span");
         descSpan.className = "task-desc";
@@ -555,7 +597,6 @@ document.addEventListener("DOMContentLoaded", () => {
         titleCell.appendChild(descSpan);
       }
 
-      // append tags into the title cell so layout columns remain stable
       if (tagsCell && tagsCell.childElementCount > 0) {
         titleCell.appendChild(tagsCell);
       }
@@ -563,13 +604,13 @@ document.addEventListener("DOMContentLoaded", () => {
       li.appendChild(titleCell);
       li.appendChild(dateCell);
       li.appendChild(dueDateCell);
-      li.appendChild(priorityCell);
+      li.appendChild(priorityDropdown);
       li.appendChild(statusCell);
       li.appendChild(deleteBtn);
       taskList.appendChild(li);
     });
 
-    // Add sorting event listeners
+    // Add sorting event listeners to column headers
     taskList.querySelectorAll(".sortable").forEach((el) => {
       el.style.cursor = "pointer";
       el.addEventListener("click", () => {
@@ -580,6 +621,7 @@ document.addEventListener("DOMContentLoaded", () => {
           sortState.key = key;
           sortState.direction = "asc";
         }
+        sortType = "none";
         saveSortState();
         renderTasks();
       });
@@ -588,30 +630,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Tag helpers
   function getTagColors(str) {
-    // deterministic hue from string
     let hash = 0;
     for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
     const hue = Math.abs(hash) % 360;
-    // choose saturation/lightness tuned for readability
     let sat = 70;
     let light = 50;
-    // make yellows lighter and more readable
     if (hue >= 30 && hue <= 70) {
       sat = 78;
-      light = 62; // lighter yellow
+      light = 62;
     }
-    // make reds slightly lighter
     if (hue <= 15 || hue >= 345) {
       sat = 72;
-      light = 56; // softer red
+      light = 56;
     }
-    // slightly desaturate greens/blues for better contrast
     if ((hue > 70 && hue < 160) || (hue > 200 && hue < 280)) {
       sat = 65;
       light = 52;
     }
     const bg = `hsl(${hue} ${sat}% ${light}%)`;
-    // determine readable text color
     const textColor = light > 58 ? '#222' : '#fff';
     return { bg, color: textColor };
   }
@@ -622,26 +658,23 @@ document.addEventListener("DOMContentLoaded", () => {
     popular.innerHTML = '';
     const entries = Object.entries(tagRegistry).sort((a,b) => b[1]-a[1]).slice(0,8);
     entries.forEach(([tag, count]) => {
-  const el = document.createElement('span');
-  el.className = 'tag-badge';
-  const tcolors = getTagColors(tag);
-  el.style.background = tcolors.bg;
-  el.style.color = tcolors.color;
-  el.textContent = `${tag} (${count})`;
+      const el = document.createElement('span');
+      el.className = 'tag-badge';
+      const tcolors = getTagColors(tag);
+      el.style.background = tcolors.bg;
+      el.style.color = tcolors.color;
+      el.textContent = `${tag} (${count})`;
       el.addEventListener('click', () => { activeTagFilter = tag; renderTasks(); });
       popular.appendChild(el);
     });
-    // update active tag indicator
     const activeWrap = document.getElementById('active-tag-filter');
     if (activeWrap) activeWrap.textContent = activeTagFilter ? `Filtering: ${activeTagFilter}` : '';
-    // also update dropdown options
     updateTagFilterOptions();
   }
 
   function updateTagFilterOptions() {
     const sel = document.getElementById('tag-filter-select');
     if (!sel) return;
-    // clear and repopulate
     const prev = sel.value;
     sel.innerHTML = '';
     const noneOpt = document.createElement('option');
@@ -654,30 +687,9 @@ document.addEventListener("DOMContentLoaded", () => {
       o.textContent = `${tag} (${count})`;
       sel.appendChild(o);
     });
-    // restore previous if still exists
     if (prev && Array.from(sel.options).some(o=>o.value===prev)) sel.value = prev;
   }
 
-  const tagFilterSelect = document.getElementById('tag-filter-select');
-  if (tagFilterSelect) {
-    tagFilterSelect.addEventListener('change', (e) => {
-      const val = e.target.value || null;
-      activeTagFilter = val;
-      renderTasks();
-    });
-  }
-
-  const clearTagFilterBtn = document.getElementById('clear-tag-filter-btn');
-  if (clearTagFilterBtn) {
-    clearTagFilterBtn.addEventListener('click', () => {
-      activeTagFilter = null;
-      const sel = document.getElementById('tag-filter-select');
-      if (sel) sel.value = '';
-      renderTasks();
-    });
-  }
-
-  // Tag suggestions (very simple: suggest existing tags that start with typed value)
   function renderTagSuggestions(prefix) {
     const wrap = document.getElementById('tag-suggestions');
     if (!wrap) return;
@@ -695,14 +707,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const parts = input.value.split(/[\s,]+/).map(s=>s.trim()).filter(Boolean);
         if (!parts.includes(m)) parts.push(m);
         input.value = parts.join(' ');
-        
         renderTagSuggestions('');
       });
       wrap.appendChild(el);
     });
   }
 
-  
   function getCurrentTagPrefix() {
     const input = document.getElementById('task-tags');
     if (!input) return '';
@@ -711,37 +721,16 @@ document.addEventListener("DOMContentLoaded", () => {
     return parts.length ? parts[parts.length-1].toLowerCase() : '';
   }
 
-  
   function sanitizeTagInputValue(val) {
-    // split into tokens, remove invalid chars, join with single space
     const parts = val.split(/[\s,]+/).map(s => s.replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase()).filter(Boolean);
     return parts.join(' ');
   }
 
-  
-  const tagsInputEl = document.getElementById('task-tags');
-  if (tagsInputEl) {
-    tagsInputEl.addEventListener('input', (e) => {
-      const cleaned = sanitizeTagInputValue(e.target.value);
-      // If user typed something different, update the field
-      if (cleaned !== e.target.value.trim()) {
-        e.target.value = cleaned;
-      }
-      const prefix = getCurrentTagPrefix();
-      renderTagSuggestions(prefix);
-    });
-    // initialize suggestion area empty
-    tagsInputEl.addEventListener('focus', () => renderTagSuggestions(getCurrentTagPrefix()));
-    tagsInputEl.addEventListener('blur', () => setTimeout(() => renderTagSuggestions(''), 150));
-  }
-
-  // Tag management: rename and delete
   function renameTag(oldTag, newTag) {
     if (!oldTag || !newTag) return;
     oldTag = oldTag.toLowerCase();
     newTag = newTag.toLowerCase();
     if (oldTag === newTag) return;
-    // Remap tags in tasks
     tasks.forEach(t => {
       if (!Array.isArray(t.tags)) return;
       if (t.tags.includes(oldTag)) {
@@ -749,7 +738,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!t.tags.includes(newTag)) t.tags.push(newTag);
       }
     });
-    // Merge counts
     const oldCount = tagRegistry[oldTag] || 0;
     const newCount = tagRegistry[newTag] || 0;
     const merged = oldCount + newCount;
@@ -766,16 +754,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!tag) return;
     tag = tag.toLowerCase();
     if (!confirm(`Delete tag '${tag}' from all tasks? This cannot be undone.`)) return;
-    // Remove from registry
     delete tagRegistry[tag];
-    // Remove tag from tasks
     tasks.forEach(t => {
       if (!Array.isArray(t.tags)) return;
       t.tags = t.tags.filter(x => x !== tag);
     });
     saveTags();
     saveTasks();
-    
     rebuildTagRegistryFromTasks();
     renderPopularTags();
     renderTagSuggestions(document.getElementById('task-tags') ? document.getElementById('task-tags').value : '');
@@ -805,11 +790,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     entries.forEach(([tag,count]) => {
-  const item = document.createElement('span');
-  item.className = 'tag-item';
-  const tcolors = getTagColors(tag);
-  item.style.background = tcolors.bg;
-  item.style.color = tcolors.color;
+      const item = document.createElement('span');
+      item.className = 'tag-item';
+      const tcolors = getTagColors(tag);
+      item.style.background = tcolors.bg;
+      item.style.color = tcolors.color;
 
       const label = document.createElement('input');
       label.type = 'text';
@@ -846,7 +831,39 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Wire manage tags button
+  const tagFilterSelect = document.getElementById('tag-filter-select');
+  if (tagFilterSelect) {
+    tagFilterSelect.addEventListener('change', (e) => {
+      const val = e.target.value || null;
+      activeTagFilter = val;
+      renderTasks();
+    });
+  }
+
+  const clearTagFilterBtn = document.getElementById('clear-tag-filter-btn');
+  if (clearTagFilterBtn) {
+    clearTagFilterBtn.addEventListener('click', () => {
+      activeTagFilter = null;
+      const sel = document.getElementById('tag-filter-select');
+      if (sel) sel.value = '';
+      renderTasks();
+    });
+  }
+
+  const tagsInputEl = document.getElementById('task-tags');
+  if (tagsInputEl) {
+    tagsInputEl.addEventListener('input', (e) => {
+      const cleaned = sanitizeTagInputValue(e.target.value);
+      if (cleaned !== e.target.value.trim()) {
+        e.target.value = cleaned;
+      }
+      const prefix = getCurrentTagPrefix();
+      renderTagSuggestions(prefix);
+    });
+    tagsInputEl.addEventListener('focus', () => renderTagSuggestions(getCurrentTagPrefix()));
+    tagsInputEl.addEventListener('blur', () => setTimeout(() => renderTagSuggestions(''), 150));
+  }
+
   const manageTagsBtn = document.getElementById('manage-tags-btn');
   if (manageTagsBtn) {
     manageTagsBtn.addEventListener('click', () => {
@@ -858,7 +875,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Initialize popular tags UI
   renderPopularTags();
 
   // --- Export/Import Functions ---
@@ -883,14 +899,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const imported = JSON.parse(e.target.result);
         if (Array.isArray(imported)) {
           tasks = imported.map(normalizeTask);
-          
           tagRegistry = {};
           tasks.forEach(t => {
             if (Array.isArray(t.tags)) t.tags.forEach(tag => tagRegistry[tag] = (tagRegistry[tag] || 0) + 1);
           });
           saveTags();
           saveTasks();
+          renderPopularTags();
           renderTasks();
+          updateTaskProgressBar();
           alert("Tasks imported successfully!");
         } else {
           alert("Invalid file format.");
@@ -907,9 +924,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentWeatherController) {
       try {
         currentWeatherController.abort();
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
       currentWeatherController = null;
     }
   }
@@ -920,13 +935,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Cancel any ongoing request to avoid race conditions
     cancelOngoingWeatherRequest();
-
     weatherInfo.innerHTML = '<p class="loading-text">Loading weather data...</p>';
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${weatherApiKey}&units=metric`;
 
-    // Create a new controller for this request
     currentWeatherController = new AbortController();
     const controller = currentWeatherController;
     const timeoutId = setTimeout(() => controller.abort(), WEATHER_TIMEOUT_MS);
@@ -934,7 +946,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
-      // If this request was aborted after creation, avoid using response
       if (controller.signal.aborted) return;
 
       if (!response.ok) {
@@ -954,24 +965,19 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === "AbortError") {
-        // If aborted because a new request started, do nothing special
         if (attempt < MAX_RETRIES) {
-          // Only show retry UI if it's a genuine timeout (not immediate abort due to another fetch)
           showWeatherError("Request timed out.", attempt);
         }
       } else {
         showWeatherError("Weather data currently unavailable.", attempt);
       }
     } finally {
-      // Clear controller only if it's this request's controller
       if (currentWeatherController === controller) currentWeatherController = null;
     }
   }
 
   async function fetchWeatherByCoords(lat, lon, attempt = 0) {
-    // Cancel any ongoing request to avoid race conditions
     cancelOngoingWeatherRequest();
-
     weatherInfo.innerHTML = '<p class="loading-text">Loading weather data...</p>';
     const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${weatherApiKey}&units=metric`;
 
@@ -1051,12 +1057,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Weather Search Events ---
-  // Debounced fetch so API is only called after user stops typing
   const debouncedFetchWeather = debounce(() => {
-    // don't call if city is empty
     const city = cityInput.value.trim();
     if (city === "") {
-      // If the input is empty, we cancel ongoing request and show a hint
       cancelOngoingWeatherRequest();
       weatherInfo.innerHTML = '<p class="loading-text">Enter a city to see the weather...</p>';
       return;
@@ -1064,13 +1067,10 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchWeather(city);
   }, DEBOUNCE_DELAY);
 
-  // Use input event (better than keydown for composition/IME)
   cityInput.addEventListener("input", debouncedFetchWeather);
 
-  // Enter should immediately fetch (no debounce)
   cityInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-      // cancel pending debounced call and run immediate fetch
       fetchWeather(cityInput.value.trim());
     }
   });
@@ -1175,12 +1175,42 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Sort Button ---
+  // --- Priority Sort Button ---
+  if (sortPriorityBtn) {
+    sortPriorityBtn.addEventListener("click", () => {
+      if (sortType === "priority") {
+        sortType = "none";
+        sortPriorityBtn.textContent = "Sort by Priority";
+      } else {
+        sortType = "priority";
+        sortPriorityBtn.textContent = "Clear Priority Sort";
+      }
+      renderTasks();
+    });
+  }
+
+  // --- Date Sort Button ---
+  if (sortDateBtn) {
+    sortDateBtn.addEventListener("click", () => {
+      if (sortType === "date") {
+        sortType = "none";
+        sortDateBtn.textContent = "Sort by Date";
+      } else {
+        sortType = "date";
+        sortDateBtn.textContent = "Clear Date Sort";
+      }
+      renderTasks();
+    });
+  }
+
+  // --- Sort A-Z Button ---
   if (sortTasksBtn) {
     sortTasksBtn.addEventListener("click", () => {
-      if (sortState.key === "title") {
+      if (sortType === "title") {
+        sortType = "none";
         sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
       } else {
+        sortType = "title";
         sortState.key = "title";
         sortState.direction = "asc";
       }
@@ -1194,7 +1224,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTasks();
     updateTaskProgressBar();
     if (yearSpan) yearSpan.textContent = new Date().getFullYear();
-    // Show local weather on page load (will prompt for geolocation)
     getLocationWeather();
   }
 

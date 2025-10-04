@@ -15,21 +15,6 @@
             src="https://kit.fontawesome.com/a076d05399.js"
             crossorigin="anonymous"
         ></script>
-        <style>
-            .task-actions {
-                display: flex;
-                gap: 1rem;
-                margin-top: 1.5rem;
-                justify-content: center;
-            }
-            .task-actions button {
-                flex: 1;
-                padding: 0.7rem 2.2rem;
-            }
-            .task-actions #clear-all-btn {
-                margin: 0;
-            }
-        </style>
     </head>
     <body>
         <header>
@@ -65,6 +50,11 @@
                         placeholder="Due date"
                         style="max-width: 160px;"
                     />
+                    <select id="priority-select">
+                        <option value="3">🟢 Low</option>
+                        <option value="2" selected>🟡 Medium</option>
+                        <option value="1">🔴 High</option>
+                    </select>
                     <button id="add-task-btn">Add Task</button>
                 </div>
                 <div class="tags-row">
@@ -101,6 +91,15 @@
                     >
                         Completed
                     </button>
+                    <button class="filter-btn priority-filter" data-filter="priority-1">
+                        🔴 High
+                    </button>
+                    <button class="filter-btn priority-filter" data-filter="priority-2">
+                        🟡 Medium
+                    </button>
+                    <button class="filter-btn priority-filter" data-filter="priority-3">
+                        🟢 Low
+                    </button>
                 </div>
                 <div class="task-progress-container">
                     <div class="task-progress-bar-bg">
@@ -120,6 +119,8 @@
                 </div>
                 <ul id="task-list"></ul>
                 <div class="task-actions">
+                    <button id="sort-priority-btn">Sort by Priority</button>
+                    <button id="sort-date-btn">Sort by Date</button>
                     <button id="sort-tasks-btn">Sort A-Z</button>
                     <button id="export-data-btn">Export Data</button>
                     <button id="import-data-btn">Import Data</button>
