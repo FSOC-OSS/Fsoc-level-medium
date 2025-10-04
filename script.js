@@ -32,12 +32,21 @@ compactViewBtn.addEventListener("click", () => setViewMode("compact"));
 document.addEventListener("DOMContentLoaded", () => {
   // --- Task Manager Setup ---
   const taskInput = document.getElementById("task-input");
-  const dueDateInput = document.getElementById("due-date-input"); // NEW
+  const dueDateInput = document.getElementById("due-date-input");
   const addTaskBtn = document.getElementById("add-task-btn");
   const taskList = document.getElementById("task-list");
   const clearAllBtn = document.getElementById("clear-all-btn");
   const filterBtns = document.querySelectorAll(".filter-btn");
   const sortTasksBtn = document.getElementById("sort-tasks-btn");
+  const taskSearch = document.getElementById("task-search");
+  const searchBtn = document.getElementById("search-btn");
+  const clearSearchBtn = document.getElementById("clear-search-btn");
+  const searchCount = document.getElementById("search-count");
+
+  // --- Export/Import Setup ---
+  const exportBtn = document.getElementById("export-data-btn");
+  const importBtn = document.getElementById("import-data-btn");
+  const importFileInput = document.getElementById("import-file-input");
 
   // --- Weather Widget Setup ---
   const cityInput = document.getElementById("city-input");
@@ -63,12 +72,69 @@ document.addEventListener("DOMContentLoaded", () => {
   const WEATHER_TIMEOUT_MS = 8000;
   const MAX_RETRIES = 3;
 
+  // --- Validation State ---
+  // Add error containers only if not present
+  let taskInputError = taskInput.parentNode.querySelector(".input-error");
+  if (!taskInputError) {
+    taskInputError = document.createElement("span");
+    taskInputError.className = "input-error";
+    taskInputError.setAttribute("aria-live", "polite");
+    taskInputError.style.display = "none";
+    taskInput.parentNode.insertBefore(taskInputError, taskInput.nextSibling);
+  }
+
+  let dueDateInputError = dueDateInput.parentNode.querySelector(".input-error");
+  if (!dueDateInputError) {
+    dueDateInputError = document.createElement("span");
+    dueDateInputError.className = "input-error";
+    dueDateInputError.setAttribute("aria-live", "polite");
+    dueDateInputError.style.display = "none";
+    dueDateInput.parentNode.insertBefore(dueDateInputError, dueDateInput.nextSibling);
+  }
+
   // --- Utility Functions ---
   function debounce(func, delay) {
     return function (...args) {
       clearTimeout(weatherSearchTimeout);
       weatherSearchTimeout = setTimeout(() => func.apply(this, args), delay);
     };
+  }
+
+  function escRegex(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function highlightMatch(text, query) {
+    if (!query) return text;
+    const r = new RegExp(`(${escRegex(query)})`, "gi");
+    return text.replace(r, "<mark>$1</mark>");
+  }
+
+  function levenshtein(a, b) {
+    const al = a.length, bl = b.length;
+    if (!al) return bl;
+    if (!bl) return al;
+    const v0 = Array.from({ length: bl + 1 }, (_, i) => i);
+    const v1 = new Array(bl + 1);
+    for (let i = 1; i <= al; i++) {
+      v1[0] = i;
+      for (let j = 1; j <= bl; j++) {
+        const cost = a[i - 1].toLowerCase() === b[j - 1].toLowerCase() ? 0 : 1;
+        v1[j] = Math.min(v1[j - 1] + 1, v0[j] + 1, v0[j - 1] + cost);
+      }
+      for (let j = 0; j <= bl; j++) v0[j] = v1[j];
+    }
+    return v1[bl];
+  }
+
+  function fuzzyMatch(text, query) {
+    if (!query) return false;
+    const t = (text || "").toLowerCase();
+    const q = query.toLowerCase();
+    if (q.length <= 1) return t.includes(q);
+    if (t.includes(q)) return true;
+    const threshold = Math.max(1, Math.floor(q.length * 0.28));
+    return levenshtein(t, q) <= threshold;
   }
 
   function saveTasks() {
@@ -79,24 +145,84 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("sortState", JSON.stringify(sortState));
   }
 
+  // --- Validation Functions ---
+  function validateTaskInput() {
+    const value = taskInput.value.trim();
+    if (!value) {
+      taskInput.classList.add("input-invalid");
+      taskInput.classList.remove("input-valid");
+      taskInputError.textContent = "Task title is required.";
+      taskInputError.style.display = "block";
+      return false;
+    }
+    if (value.length < 3) {
+      taskInput.classList.add("input-invalid");
+      taskInput.classList.remove("input-valid");
+      taskInputError.textContent = "Task title must be at least 3 characters.";
+      taskInputError.style.display = "block";
+      return false;
+    }
+    taskInput.classList.remove("input-invalid");
+    taskInput.classList.add("input-valid");
+    taskInputError.textContent = "";
+    taskInputError.style.display = "none";
+    return true;
+  }
+
+  function validateDueDateInput() {
+    const value = dueDateInput.value;
+    if (value) {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      if (selectedDate < today) {
+        dueDateInput.classList.add("input-invalid");
+        dueDateInput.classList.remove("input-valid");
+        dueDateInputError.textContent = "Due date cannot be in the past.";
+        dueDateInputError.style.display = "block";
+        return false;
+      }
+    }
+    dueDateInput.classList.remove("input-invalid");
+    if (value) dueDateInput.classList.add("input-valid");
+    dueDateInputError.textContent = "";
+    dueDateInputError.style.display = "none";
+    return true;
+  }
+
+  function validateForm() {
+    const validTask = validateTaskInput();
+    const validDate = validateDueDateInput();
+    return validTask && validDate;
+  }
+
   // --- Task Data Model ---
-  // Each task: { text, completed, created, priority, dueDate }
   function addTask() {
+    if (!validateForm()) return;
     const text = taskInput.value.trim();
     const dueDate = dueDateInput.value ? dueDateInput.value : null;
-    if (!text) return;
     const newTask = {
       text,
       completed: false,
       created: Date.now(),
-      priority: 2, // default priority: 1=High, 2=Medium, 3=Low
+      priority: 2,
       dueDate
     };
     tasks.push(newTask);
     saveTasks();
     taskInput.value = "";
     dueDateInput.value = "";
+    taskInput.classList.remove("input-valid");
+    dueDateInput.classList.remove("input-valid");
     renderTasks();
+  }
+
+  function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+
+  function saveSortState() {
+    localStorage.setItem("sortState", JSON.stringify(sortState));
   }
 
   function deleteTask(index) {
@@ -130,6 +256,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const saveChanges = () => {
       const newText = input.value.trim();
+      if (newText.length < 3) {
+        input.classList.add("input-invalid");
+        input.classList.remove("input-valid");
+        return;
+      }
       tasks[index].text = newText || originalText;
       saveTasks();
       renderTasks();
@@ -195,8 +326,31 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("tasks", JSON.stringify(tasks));
     }
 
-    function saveSortState() {
-        localStorage.setItem("sortState", JSON.stringify(sortState));
+    const q = taskSearch ? taskSearch.value.trim() : "";
+    const matches = q
+      ? filteredTasks.filter((t) =>
+          fuzzyMatch(t.text, q) || fuzzyMatch(t.description || "", q) || (Array.isArray(t.tags) && t.tags.some(tag => fuzzyMatch(tag, q)))
+        )
+      : [];
+    if (searchCount) searchCount.textContent = q ? `${matches.length} match(es)` : "";
+    if (q && searchBtn && searchBtn.dataset.active === "true") filteredTasks = matches;
+
+    // Sorting
+    filteredTasks = sortTasks(filteredTasks);
+
+    taskList.innerHTML = "";
+    const filterActiveBtn = document.querySelector("#filter-active");
+    const filterCompletedBtn = document.querySelector("#filter-completed");
+    if (filterActiveBtn) filterActiveBtn.innerHTML = `Active [${incompleteTasks.length}]`;
+    if (filterCompletedBtn) filterCompletedBtn.innerHTML = `Completed [${completedTasks.length}]`;
+
+    if (filteredTasks.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "task-empty-state";
+      empty.setAttribute("aria-live", "polite");
+      empty.textContent = "No tasks here. Add a new one or change your filter!";
+      taskList.appendChild(empty);
+      return;
     }
 
     // Table header for sorting
@@ -235,7 +389,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (task.dueDate && !task.completed) {
         const now = new Date();
         const due = new Date(task.dueDate);
-        if (due < now.setHours(0,0,0,0)) {
+        now.setHours(0,0,0,0);
+        if (due < now) {
           li.classList.add("overdue-task");
           isOverdue = true;
         }
@@ -248,8 +403,9 @@ document.addEventListener("DOMContentLoaded", () => {
       checkbox.dataset.action = "toggle";
       checkbox.style.marginRight = "0.5rem";
 
-      const taskText = document.createElement("span");
-      taskText.textContent = task.text;
+  const taskText = document.createElement("span");
+  const qval = taskSearch ? taskSearch.value.trim() : "";
+  taskText.innerHTML = qval ? highlightMatch(task.text, qval) : task.text;
       if (task.completed) taskText.classList.add("completed");
       taskText.dataset.action = "edit";
 
@@ -285,6 +441,13 @@ document.addEventListener("DOMContentLoaded", () => {
       deleteBtn.textContent = "🗑️";
       deleteBtn.dataset.action = "delete";
 
+      if (task.description) {
+        const descSpan = document.createElement("span");
+        descSpan.className = "task-desc";
+        descSpan.innerHTML = qval ? highlightMatch(`(${task.description})`, qval) : `(${task.description})`;
+        titleCell.appendChild(descSpan);
+      }
+
       li.appendChild(titleCell);
       li.appendChild(dateCell);
       li.appendChild(dueDateCell);
@@ -300,10 +463,47 @@ document.addEventListener("DOMContentLoaded", () => {
         renderTasks();
     }
 
-    function clearAllTasks() {
-        tasks = [];
-        saveTasks();
-        renderTasks();
+  // --- Export/Import Functions ---
+  function exportTasks() {
+    const dataStr = JSON.stringify(tasks, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "tasks-export.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function importTasksFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if (Array.isArray(imported)) {
+          tasks = imported;
+          saveTasks();
+          renderTasks();
+          alert("Tasks imported successfully!");
+        } else {
+          alert("Invalid file format.");
+        }
+      } catch (err) {
+        alert("Error importing tasks: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // --- Weather Functions ---
+  async function fetchWeather(city, attempt = 0) {
+    if (!city) {
+      weatherInfo.innerHTML =
+        '<p class="loading-text">Enter a city to see the weather...</p>';
+      return;
     }
 
     function toggleTaskCompletion(index) {
@@ -681,6 +881,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Task Events ---
   addTaskBtn.addEventListener("click", addTask);
+  taskInput.addEventListener("input", validateTaskInput);
+  dueDateInput.addEventListener("input", validateDueDateInput);
   taskInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") addTask();
   });
@@ -701,64 +903,84 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     getLocationBtn.addEventListener("click", getLocationWeather);
 
-    // --- Task Events ---
-    addTaskBtn.addEventListener("click", addTask);
-    taskInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") addTask();
+  if (taskSearch) {
+    taskSearch.addEventListener("input", () => {
+      renderTasks();
     });
-    clearAllBtn.addEventListener("click", clearAllTasks);
+  }
 
-    filterBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-            filterBtns.forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
-            currentFilter = btn.dataset.filter;
-            renderTasks();
-        });
+  if (searchBtn) {
+    searchBtn.addEventListener("click", () => {
+      const isActive = searchBtn.dataset.active === "true";
+      searchBtn.dataset.active = isActive ? "false" : "true";
+      searchBtn.classList.toggle("active", !isActive);
+      renderTasks();
+    });
+  }
+
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", () => {
+      if (taskSearch) taskSearch.value = "";
+      if (searchBtn) {
+        searchBtn.dataset.active = "false";
+        searchBtn.classList.remove("active");
+      }
+      if (searchCount) searchCount.textContent = "";
+      renderTasks();
+    });
+  }
+
+  window.addEventListener("keydown", (e) => {
+    const isMac = navigator.platform.toUpperCase().includes('MAC');
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+    if (mod && e.key.toLowerCase() === 'f') {
+      if (taskSearch) {
+        e.preventDefault();
+        taskSearch.focus();
+        taskSearch.select();
+      }
+    }
+  });
+
+  // --- Export/Import Events ---
+  if (exportBtn) {
+    exportBtn.addEventListener("click", exportTasks);
+  }
+  if (importBtn && importFileInput) {
+    importBtn.addEventListener("click", () => importFileInput.click());
+    importFileInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) {
+        importTasksFromFile(e.target.files[0]);
+        importFileInput.value = "";
+      }
+    });
+  }
+
+  // --- Theme Toggle ---
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      document.body.classList.toggle("dark-theme");
     });
 
-    taskList.addEventListener("click", (e) => {
-        const li = e.target.closest("li.task-item");
-        if (!li) return;
-        const index = Number(li.dataset.index);
-        if (e.target.dataset.action === "toggle") {
-            toggleTaskCompletion(index);
-        } else if (e.target.dataset.action === "delete") {
-            deleteTask(index);
-        } else if (e.target.dataset.action === "edit") {
-            enableInlineEdit(index, e.target);
-        }
+  // --- Sort Button ---
+  if (sortTasksBtn) {
+    sortTasksBtn.addEventListener("click", () => {
+      if (sortState.key === "title") {
+        sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
+      } else {
+        sortState.key = "title";
+        sortState.direction = "asc";
+      }
+      saveSortState();
+      renderTasks();
     });
 
-    // --- Theme Toggle ---
-    if (themeToggle) {
-        themeToggle.addEventListener("click", () => {
-            document.body.classList.toggle("dark-theme");
-        });
-    }
-
-    // --- Sort Button ---
-    if (sortTasksBtn) {
-        sortTasksBtn.addEventListener("click", () => {
-            // Toggle between title asc/desc for demo
-            if (sortState.key === "title") {
-                sortState.direction =
-                    sortState.direction === "asc" ? "desc" : "asc";
-            } else {
-                sortState.key = "title";
-                sortState.direction = "asc";
-            }
-            saveSortState();
-            renderTasks();
-        });
-    }
-
-    // --- Init ---
-    function init() {
-        renderTasks();
-        if (yearSpan) yearSpan.textContent = new Date().getFullYear();
-        getLocationWeather(); // Show local weather on page load
-    }
+  // --- Init ---
+  function init() {
+    renderTasks();
+    if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+    getLocationWeather();
+  }
 
     init();
 });
