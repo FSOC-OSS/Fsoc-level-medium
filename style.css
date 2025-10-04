@@ -379,10 +379,13 @@ button:active,
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 #city-input {
-    flex-grow: 1;
+    flex: 1 1 180px;
+    min-width: 120px;
     padding: 0.75rem 1rem;
     border: 1.5px solid var(--border-color);
     border-radius: 8px;
@@ -390,6 +393,7 @@ button:active,
     background: rgba(255,255,255,0.7);
     transition: border 0.2s, box-shadow 0.2s;
     outline: none;
+    margin-bottom: 0.5rem;
 }
 #city-input:focus {
     border: 1.5px solid var(--primary-color);
@@ -407,10 +411,12 @@ button:active,
 }
 
 #weather-info .weather-icon {
-    width: 54px;
-    height: 54px;
-    margin: 0.5rem auto;
-    filter: drop-shadow(0 2px 8px rgba(79,140,255,0.10));
+    width: 110px;
+    height: 110px;
+    margin: 1.2rem auto;
+    display: block;
+    filter: drop-shadow(0 2px 12px rgba(79,140,255,0.18));
+    transition: width 0.2s, height 0.2s;
 }
 
 #weather-info p {
@@ -494,7 +500,15 @@ footer {
         padding: 2rem 1rem 1.5rem 1rem;
 
     }
-
+    .weather-search {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    #city-input {
+        width: 100%;
+        min-width: 0;
+    }
 }
 
 @media (max-width: 600px) {
@@ -507,6 +521,19 @@ footer {
     }
     .card {
         padding: 1.2rem 0.5rem 1rem 0.5rem;
+    }
+    .weather-search {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    #city-input {
+        width: 100%;
+        min-width: 0;
+    }
+    #weather-info .weather-icon {
+        width: 80px;
+        height: 80px;
     }
 }
 .contact-card .contact-info {
@@ -564,70 +591,75 @@ margin-left: 600px;
     margin-left: 300px;
     text-align: center;
 }
-.sort-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.8rem 0.5rem;
-    background: rgba(79, 140, 255, 0.05);
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-    user-select: none;
+
+.task-header {
+  background: rgba(0,0,0,0.03);
+  font-weight: bold;
+  border-bottom: 1px solid var(--border-color);
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
+  align-items: center;
+  padding: 0.5rem 0.5rem;
 }
 
-.sort-column {
-    cursor: pointer;
-    padding: 0.3rem 0.5rem;
-    border-radius: 4px;
-    transition: background 0.2s;
-    font-weight: 500;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
+.task-header .sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
 }
-
-.sort-column:hover {
-    background: rgba(79, 140, 255, 0.1);
-}
-
-.sort-column.active {
-    color: var(--primary-color);
-    font-weight: 600;
-}
-
-.sort-arrow {
-    font-size: 0.7rem;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.sort-column.active .sort-arrow {
-    opacity: 1;
-}
-
-.col-title {
-    flex: 1;
-}
-
-.col-status {
-    flex: 0 0 150px;
-}
-
-.col-actions {
-    width: 12%;
-    text-align: right;
+.task-header .sortable:hover {
+  color: var(--primary-color);
 }
 
 .task-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 0.5rem;
-    border-bottom: 1px solid var(--border-color);
-    transition: background 0.2s, transform 0.2s;
+  transition: background 0.2s, transform 0.3s;
 }
 
-.task-item.sorting {
-    transform: translateY(-2px);
+#due-date-input {
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: rgba(255,255,255,0.7);
+    transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+#due-date-input:focus {
+    border: 1.5px solid var(--primary-color);
+    box-shadow: 0 2px 8px rgba(79,140,255,0.08);
+}
+
+.overdue-task {
+    background: #ffeaea !important;
+    border-left: 4px solid #dc3545;
+    animation: overduePulse 1s infinite alternate;
+}
+.overdue-date {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+@keyframes overduePulse {
+    from { background: #ffeaea; }
+    to { background: #fff5f5; }
+}
+
+.input-error {
+  color: #dc3545;
+  font-size: 0.95rem;
+  margin-left: 0.5rem;
+  display: block;
+  font-weight: 500;
+}
+
+.input-invalid {
+  border: 2px solid #dc3545 !important;
+  background: #ffeaea !important;
+}
+
+.input-valid {
+  border: 2px solid #28a745 !important;
+  background: #e6fff2 !important;
 }

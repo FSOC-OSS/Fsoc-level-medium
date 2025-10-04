@@ -1,14 +1,22 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // --- Task Manager Setup ---
   const taskInput = document.getElementById("task-input");
+  const dueDateInput = document.getElementById("due-date-input");
   const addTaskBtn = document.getElementById("add-task-btn");
   const taskList = document.getElementById("task-list");
   const clearAllBtn = document.getElementById("clear-all-btn");
   const filterBtns = document.querySelectorAll(".filter-btn");
-  const sortColumns = document.querySelectorAll(".sort-column");
   const sortTasksBtn = document.getElementById("sort-tasks-btn");
 
+  // --- Export/Import Setup ---
+  const exportBtn = document.getElementById("export-data-btn");
+  const importBtn = document.getElementById("import-data-btn");
+  const importFileInput = document.getElementById("import-file-input");
+
+  // --- Weather Widget Setup ---
   const cityInput = document.getElementById("city-input");
   const searchWeatherBtn = document.getElementById("search-weather-btn");
+  const getLocationBtn = document.getElementById("get-location-btn");
   const weatherInfo = document.getElementById("weather-info");
   const themeToggle = document.getElementById("theme-toggle");
   const yearSpan = document.getElementById("year");
@@ -16,12 +24,38 @@ document.addEventListener("DOMContentLoaded", () => {
   let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
   let currentFilter = "all";
   let weatherSearchTimeout = null;
-  let currentSort = { column: null, ascending: true };
 
-  const weatherApiKey = "YOUR_API_KEY_HERE";
+  // --- Sorting State ---
+  let sortState = JSON.parse(localStorage.getItem("sortState")) || {
+    key: "title",
+    direction: "asc"
+  };
+
+  // --- Weather API Key ---
+  const weatherApiKey = "4b1ee5452a2e3f68205153f28bf93927";
   const DEBOUNCE_DELAY = 500;
   const WEATHER_TIMEOUT_MS = 8000;
-  const MAX_RETRIES = 2;
+  const MAX_RETRIES = 3;
+
+  // --- Validation State ---
+  // Add error containers only if not present
+  let taskInputError = taskInput.parentNode.querySelector(".input-error");
+  if (!taskInputError) {
+    taskInputError = document.createElement("span");
+    taskInputError.className = "input-error";
+    taskInputError.setAttribute("aria-live", "polite");
+    taskInputError.style.display = "none";
+    taskInput.parentNode.insertBefore(taskInputError, taskInput.nextSibling);
+  }
+
+  let dueDateInputError = dueDateInput.parentNode.querySelector(".input-error");
+  if (!dueDateInputError) {
+    dueDateInputError = document.createElement("span");
+    dueDateInputError.className = "input-error";
+    dueDateInputError.setAttribute("aria-live", "polite");
+    dueDateInputError.style.display = "none";
+    dueDateInput.parentNode.insertBefore(dueDateInputError, dueDateInput.nextSibling);
+  }
 
   // --- Utility Functions ---
   function debounce(func, delay) {
@@ -35,143 +69,91 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }
 
-  // Sort state setter — does not mutate tasks array, only sets currentSort and re-renders
-  function sortTasks(column) {
-    if (column === "none") {
-      currentSort.column = null;
-      currentSort.ascending = true;
-      updateSortIndicators();
-      renderTasks();
-      return;
-    }
-
-    if (currentSort.column === column) {
-      currentSort.ascending = !currentSort.ascending;
-    } else {
-      currentSort.column = column;
-      currentSort.ascending = true;
-    }
-
-    updateSortIndicators();
-    renderTasks();
+  function saveSortState() {
+    localStorage.setItem("sortState", JSON.stringify(sortState));
   }
 
-  // Update arrows/active classes on sort columns
-  function updateSortIndicators() {
-    sortColumns.forEach((col) => {
-      const arrow = col.querySelector(".sort-arrow");
-      if (col.dataset.sort === currentSort.column) {
-        col.classList.add("active");
-        if (arrow) arrow.textContent = currentSort.ascending ? "▼" : "▲";
-      } else {
-        col.classList.remove("active");
-        if (arrow) arrow.textContent = "";
+  // --- Validation Functions ---
+  function validateTaskInput() {
+    const value = taskInput.value.trim();
+    if (!value) {
+      taskInput.classList.add("input-invalid");
+      taskInput.classList.remove("input-valid");
+      taskInputError.textContent = "Task title is required.";
+      taskInputError.style.display = "block";
+      return false;
+    }
+    if (value.length < 3) {
+      taskInput.classList.add("input-invalid");
+      taskInput.classList.remove("input-valid");
+      taskInputError.textContent = "Task title must be at least 3 characters.";
+      taskInputError.style.display = "block";
+      return false;
+    }
+    taskInput.classList.remove("input-invalid");
+    taskInput.classList.add("input-valid");
+    taskInputError.textContent = "";
+    taskInputError.style.display = "none";
+    return true;
+  }
+
+  function validateDueDateInput() {
+    const value = dueDateInput.value;
+    if (value) {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      if (selectedDate < today) {
+        dueDateInput.classList.add("input-invalid");
+        dueDateInput.classList.remove("input-valid");
+        dueDateInputError.textContent = "Due date cannot be in the past.";
+        dueDateInputError.style.display = "block";
+        return false;
       }
-    });
-  }
-
-  function createTaskElement(task, index) {
-    const li = document.createElement("li");
-    li.className = "task-item";
-    li.dataset.index = index;
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = task.completed;
-    checkbox.dataset.action = "toggle";
-
-    const taskText = document.createElement("span");
-    taskText.textContent = task.text;
-    if (task.completed) taskText.classList.add("completed");
-    taskText.dataset.action = "edit";
-
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className = "delete-btn";
-    deleteBtn.textContent = "🗑️";
-    deleteBtn.dataset.action = "delete";
-
-    li.appendChild(checkbox);
-    li.appendChild(taskText);
-    li.appendChild(deleteBtn);
-    return li;
-  }
-
-  function renderTasks() {
-    if (!taskList) return;
-
-    const incompleteCount = tasks.filter((t) => !t.completed).length;
-    const completedCount = tasks.filter((t) => t.completed).length;
-
-    const activeCounter = document.querySelector("#filter-active");
-    const completedCounter = document.querySelector("#filter-completed");
-    if (activeCounter) activeCounter.innerHTML = `Active [${incompleteCount}]`;
-    if (completedCounter) completedCounter.innerHTML = `Completed [${completedCount}]`;
-
-    let displayedTasks = [...tasks];
-
-    if (currentSort.column) {
-      displayedTasks.sort((a, b) => {
-        let compareA, compareB;
-        if (currentSort.column === "title") {
-          compareA = a.text.toLowerCase();
-          compareB = b.text.toLowerCase();
-        } else if (currentSort.column === "status") {
-          compareA = a.completed ? 1 : 0;
-          compareB = b.completed ? 1 : 0;
-        } else {
-          return 0;
-        }
-
-        if (compareA < compareB) return currentSort.ascending ? -1 : 1;
-        if (compareA > compareB) return currentSort.ascending ? 1 : -1;
-        return 0;
-      });
-    } else {
-      displayedTasks = [
-        ...tasks.filter((t) => !t.completed),
-        ...tasks.filter((t) => t.completed),
-      ];
     }
-
-    // Apply filter to displayed list
-    const filteredTasks = displayedTasks.filter((task) => {
-      if (currentFilter === "active") return !task.completed;
-      if (currentFilter === "completed") return task.completed;
-      return true;
-    });
-
-    taskList.innerHTML = "";
-
-    if (filteredTasks.length === 0) {
-      const empty = document.createElement("li");
-      empty.className = "task-empty-state";
-      empty.setAttribute("aria-live", "polite");
-      empty.textContent = "No tasks here. Add a new one or change your filter!";
-      taskList.appendChild(empty);
-      return;
-    }
-
-    // Append tasks — compute the original index relative to the stored tasks array
-    filteredTasks.forEach((task) => {
-      const originalIndex = tasks.indexOf(task);
-      taskList.appendChild(createTaskElement(task, originalIndex));
-    });
+    dueDateInput.classList.remove("input-invalid");
+    if (value) dueDateInput.classList.add("input-valid");
+    dueDateInputError.textContent = "";
+    dueDateInputError.style.display = "none";
+    return true;
   }
 
+  function validateForm() {
+    const validTask = validateTaskInput();
+    const validDate = validateDueDateInput();
+    return validTask && validDate;
+  }
+
+  // --- Task Data Model ---
   function addTask() {
-    if (!taskInput) return;
+    if (!validateForm()) return;
     const text = taskInput.value.trim();
-    if (!text) return;
-
-    const newTask = { text, completed: false };
+    const dueDate = dueDateInput.value ? dueDateInput.value : null;
+    const newTask = {
+      text,
+      completed: false,
+      created: Date.now(),
+      priority: 2,
+      dueDate
+    };
     tasks.push(newTask);
     saveTasks();
     taskInput.value = "";
+    dueDateInput.value = "";
+    taskInput.classList.remove("input-valid");
+    dueDateInput.classList.remove("input-valid");
     renderTasks();
   }
 
+  function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+
+  function saveSortState() {
+    localStorage.setItem("sortState", JSON.stringify(sortState));
+  }
+
   function deleteTask(index) {
-    if (typeof index !== "number" || index < 0 || index >= tasks.length) return;
     tasks.splice(index, 1);
     saveTasks();
     renderTasks();
@@ -184,28 +166,29 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function toggleTaskCompletion(index) {
-    if (typeof index !== "number" || !tasks[index]) return;
     tasks[index].completed = !tasks[index].completed;
     saveTasks();
     renderTasks();
   }
 
   function enableInlineEdit(index, spanEl) {
-    if (!tasks[index]) return;
     if (spanEl.parentElement.querySelector(".task-edit-input")) return;
-
     const originalText = tasks[index].text;
     const input = document.createElement("input");
     input.type = "text";
     input.value = originalText;
     input.className = "task-edit-input";
-
     spanEl.replaceWith(input);
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
 
     const saveChanges = () => {
       const newText = input.value.trim();
+      if (newText.length < 3) {
+        input.classList.add("input-invalid");
+        input.classList.remove("input-valid");
+        return;
+      }
       tasks[index].text = newText || originalText;
       saveTasks();
       renderTasks();
@@ -221,15 +204,244 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Weather Functions ---
-  async function fetchWeather(city, attempt = 0) {
-    if (!city) {
-      if (weatherInfo) weatherInfo.innerHTML = '<p class="loading-text">Enter a city to see the weather...</p>';
+  // --- Sorting ---
+  function sortTasks(tasksArr) {
+    let sorted = [...tasksArr];
+    switch (sortState.key) {
+      case "title":
+        sorted.sort((a, b) =>
+          sortState.direction === "asc"
+            ? a.text.localeCompare(b.text)
+            : b.text.localeCompare(a.text)
+        );
+        break;
+      case "date":
+        sorted.sort((a, b) =>
+          sortState.direction === "asc"
+            ? a.created - b.created
+            : b.created - a.created
+        );
+        break;
+      case "priority":
+        sorted.sort((a, b) =>
+          sortState.direction === "asc"
+            ? a.priority - b.priority
+            : b.priority - a.priority
+        );
+        break;
+      case "status":
+        sorted.sort((a, b) =>
+          sortState.direction === "asc"
+            ? a.completed - b.completed
+            : b.completed - a.completed
+        );
+        break;
+      case "dueDate":
+        sorted.sort((a, b) => {
+          if (!a.dueDate && !b.dueDate) return 0;
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return sortState.direction === "asc"
+            ? new Date(a.dueDate) - new Date(b.dueDate)
+            : new Date(b.dueDate) - new Date(a.dueDate);
+        });
+        break;
+      default:
+        break;
+    }
+    return sorted;
+  }
+
+  function renderTasks() {
+    let incompleteTasks = [];
+    let completedTasks = [];
+    tasks.forEach((task, index) => {
+      if (task.completed) completedTasks.push(task);
+      else incompleteTasks.push(task);
+    });
+
+    // Filtering
+    let filteredTasks = tasks.filter((task) => {
+      if (currentFilter === "active") return !task.completed;
+      if (currentFilter === "completed") return task.completed;
+      return true;
+    });
+
+    // Sorting
+    filteredTasks = sortTasks(filteredTasks);
+
+    taskList.innerHTML = "";
+    const filterActiveBtn = document.querySelector("#filter-active");
+    const filterCompletedBtn = document.querySelector("#filter-completed");
+    if (filterActiveBtn) filterActiveBtn.innerHTML = `Active [${incompleteTasks.length}]`;
+    if (filterCompletedBtn) filterCompletedBtn.innerHTML = `Completed [${completedTasks.length}]`;
+
+    if (filteredTasks.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "task-empty-state";
+      empty.setAttribute("aria-live", "polite");
+      empty.textContent = "No tasks here. Add a new one or change your filter!";
+      taskList.appendChild(empty);
       return;
     }
 
-    if (weatherInfo) weatherInfo.innerHTML = '<p class="loading-text">Loading weather data...</p>';
+    // Table header for sorting
+    const header = document.createElement("li");
+    header.className = "task-header";
+    header.innerHTML = `
+      <span class="sortable" data-sort="title">Title ${sortState.key === "title" ? (sortState.direction === "asc" ? "▲" : "▼") : ""}</span>
+      <span class="sortable" data-sort="date">Date Added ${sortState.key === "date" ? (sortState.direction === "asc" ? "▲" : "▼") : ""}</span>
+      <span class="sortable" data-sort="dueDate">Due Date ${sortState.key === "dueDate" ? (sortState.direction === "asc" ? "▲" : "▼") : ""}</span>
+      <span class="sortable" data-sort="priority">Priority ${sortState.key === "priority" ? (sortState.direction === "asc" ? "▲" : "▼") : ""}</span>
+      <span class="sortable" data-sort="status">Status ${sortState.key === "status" ? (sortState.direction === "asc" ? "▲" : "▼") : ""}</span>
+      <span></span>
+    `;
+    header.style.fontWeight = "bold";
+    header.style.background = "rgba(0,0,0,0.03)";
+    header.style.borderBottom = "1px solid var(--border-color)";
+    header.style.display = "grid";
+    header.style.gridTemplateColumns = "2fr 1fr 1fr 1fr 1fr 0.5fr";
+    header.style.alignItems = "center";
+    header.style.padding = "0.5rem 0.5rem";
+    taskList.appendChild(header);
 
+    filteredTasks.forEach((task, idx) => {
+      const originalIndex = tasks.findIndex((t) => t === task);
+      const li = document.createElement("li");
+      li.className = "task-item";
+      li.dataset.index = originalIndex;
+      li.style.display = "grid";
+      li.style.gridTemplateColumns = "2fr 1fr 1fr 1fr 1fr 0.5fr";
+      li.style.alignItems = "center";
+      li.style.padding = "0.5rem 0.5rem";
+      li.style.transition = "background 0.2s";
+
+      // Highlight overdue tasks
+      let isOverdue = false;
+      if (task.dueDate && !task.completed) {
+        const now = new Date();
+        const due = new Date(task.dueDate);
+        now.setHours(0,0,0,0);
+        if (due < now) {
+          li.classList.add("overdue-task");
+          isOverdue = true;
+        }
+      }
+
+      // Title
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = task.completed;
+      checkbox.dataset.action = "toggle";
+      checkbox.style.marginRight = "0.5rem";
+
+      const taskText = document.createElement("span");
+      taskText.textContent = task.text;
+      if (task.completed) taskText.classList.add("completed");
+      taskText.dataset.action = "edit";
+
+      const titleCell = document.createElement("span");
+      titleCell.appendChild(checkbox);
+      titleCell.appendChild(taskText);
+
+      // Date Added
+      const dateCell = document.createElement("span");
+      const dateObj = new Date(task.created);
+      dateCell.textContent = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Due Date
+      const dueDateCell = document.createElement("span");
+      dueDateCell.textContent = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "-";
+      if (isOverdue) dueDateCell.classList.add("overdue-date");
+
+      // Priority
+      const priorityCell = document.createElement("span");
+      let priorityText = "Medium";
+      if (task.priority === 1) priorityText = "High";
+      if (task.priority === 3) priorityText = "Low";
+      priorityCell.textContent = priorityText;
+
+      // Status
+      const statusCell = document.createElement("span");
+      statusCell.textContent = task.completed ? "Done" : "Active";
+      statusCell.style.color = task.completed ? "var(--completed-color)" : "var(--primary-color)";
+
+      // Delete
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.textContent = "🗑️";
+      deleteBtn.dataset.action = "delete";
+
+      li.appendChild(titleCell);
+      li.appendChild(dateCell);
+      li.appendChild(dueDateCell);
+      li.appendChild(priorityCell);
+      li.appendChild(statusCell);
+      li.appendChild(deleteBtn);
+      taskList.appendChild(li);
+    });
+
+    // Add sorting event listeners
+    taskList.querySelectorAll(".sortable").forEach((el) => {
+      el.style.cursor = "pointer";
+      el.addEventListener("click", () => {
+        const key = el.dataset.sort;
+        if (sortState.key === key) {
+          sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
+        } else {
+          sortState.key = key;
+          sortState.direction = "asc";
+        }
+        saveSortState();
+        renderTasks();
+      });
+    });
+  }
+
+  // --- Export/Import Functions ---
+  function exportTasks() {
+    const dataStr = JSON.stringify(tasks, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "tasks-export.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function importTasksFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if (Array.isArray(imported)) {
+          tasks = imported;
+          saveTasks();
+          renderTasks();
+          alert("Tasks imported successfully!");
+        } else {
+          alert("Invalid file format.");
+        }
+      } catch (err) {
+        alert("Error importing tasks: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // --- Weather Functions ---
+  async function fetchWeather(city, attempt = 0) {
+    if (!city) {
+      weatherInfo.innerHTML =
+        '<p class="loading-text">Enter a city to see the weather...</p>';
+      return;
+    }
+    weatherInfo.innerHTML =
+      '<p class="loading-text">Loading weather data...</p>';
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
       city
     )}&appid=${weatherApiKey}&units=metric`;
@@ -265,22 +477,55 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function fetchWeatherByCoords(lat, lon, attempt = 0) {
+    weatherInfo.innerHTML =
+      '<p class="loading-text">Loading weather data...</p>';
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${weatherApiKey}&units=metric`;
+
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), WEATHER_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(id);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          showWeatherError("Invalid API key.");
+          return;
+        }
+        throw new Error(`Server error (${response.status})`);
+      }
+
+      const data = await response.json();
+      displayWeather(data);
+    } catch (error) {
+      clearTimeout(id);
+      if (error.name === "AbortError") {
+        showWeatherError("Request timed out.", attempt);
+      } else {
+        showWeatherError("Weather data currently unavailable.", attempt);
+      }
+    }
+  }
+
   function showWeatherError(message, attempt = 0) {
     const canRetry = attempt < MAX_RETRIES;
-    if (!weatherInfo) return;
     weatherInfo.innerHTML = `
       <p class="error-text">${message}</p>
       ${canRetry ? '<button id="weather-retry-btn" class="retry-btn">Retry</button>' : ""}
     `;
     const retryBtn = document.getElementById("weather-retry-btn");
     if (retryBtn) retryBtn.addEventListener("click", () => {
-      const city = cityInput ? cityInput.value.trim() : "";
-      fetchWeather(city, attempt + 1);
+      if (navigator.geolocation && !cityInput.value) {
+        getLocationWeather();
+      } else {
+        fetchWeather(cityInput.value.trim(), attempt + 1);
+      }
     });
   }
 
   function displayWeather(data) {
-    if (!weatherInfo) return;
     const { name, main, weather } = data;
     const iconUrl = `https://openweathermap.org/img/wn/${weather[0].icon}@2x.png`;
     weatherInfo.innerHTML = `
@@ -291,106 +536,108 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  const debouncedFetchWeather = debounce(fetchWeather, DEBOUNCE_DELAY);
+  function getLocationWeather() {
+    if (!navigator.geolocation) {
+      weatherInfo.innerHTML = `<p class="error-text">Geolocation is not supported by your browser.</p>`;
+      return;
+    }
+    weatherInfo.innerHTML = `<p class="loading-text">Detecting your location...</p>`;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude);
+      },
+      (err) => {
+        weatherInfo.innerHTML = `<p class="error-text">Unable to get your location. Please allow location access and try again, or search for a city above.</p>`;
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }
 
-  // --- Event Listeners (attach only when elements exist) ---
-  if (taskList) {
-    taskList.addEventListener("click", (e) => {
-      const action = e.target.dataset.action;
-      if (!action) return;
-      const li = e.target.closest(".task-item");
-      if (!li) return;
-      const index = parseInt(li.dataset.index, 10);
-      if (action === "delete") deleteTask(index);
+  // --- Weather Search Events ---
+  cityInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      fetchWeather(cityInput.value.trim());
+    }
+  });
+  searchWeatherBtn.addEventListener("click", () => {
+    fetchWeather(cityInput.value.trim());
+  });
+  getLocationBtn.addEventListener("click", getLocationWeather);
+
+  // --- Task Events ---
+  addTaskBtn.addEventListener("click", addTask);
+  taskInput.addEventListener("input", validateTaskInput);
+  dueDateInput.addEventListener("input", validateDueDateInput);
+  taskInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addTask();
+  });
+  dueDateInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addTask();
+  });
+  clearAllBtn.addEventListener("click", clearAllTasks);
+
+  filterBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      filterBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentFilter = btn.dataset.filter;
+      renderTasks();
     });
+  });
 
-    taskList.addEventListener("change", (e) => {
-      if (e.target.dataset.action === "toggle" && e.target.type === "checkbox") {
-        const li = e.target.closest(".task-item");
-        if (!li) return;
-        toggleTaskCompletion(parseInt(li.dataset.index, 10));
+  taskList.addEventListener("click", (e) => {
+    const li = e.target.closest("li.task-item");
+    if (!li) return;
+    const index = Number(li.dataset.index);
+    if (e.target.dataset.action === "toggle") {
+      toggleTaskCompletion(index);
+    } else if (e.target.dataset.action === "delete") {
+      deleteTask(index);
+    } else if (e.target.dataset.action === "edit") {
+      enableInlineEdit(index, e.target);
+    }
+  });
+
+  // --- Export/Import Events ---
+  if (exportBtn) {
+    exportBtn.addEventListener("click", exportTasks);
+  }
+  if (importBtn && importFileInput) {
+    importBtn.addEventListener("click", () => importFileInput.click());
+    importFileInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) {
+        importTasksFromFile(e.target.files[0]);
+        importFileInput.value = "";
       }
     });
+  }
 
-    taskList.addEventListener("dblclick", (e) => {
-      if (e.target.dataset.action === "edit" && e.target.tagName === "SPAN") {
-        const li = e.target.closest(".task-item");
-        if (!li) return;
-        enableInlineEdit(parseInt(li.dataset.index, 10), e.target);
-      }
+  // --- Theme Toggle ---
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      document.body.classList.toggle("dark-theme");
     });
   }
 
-  if (addTaskBtn) addTaskBtn.addEventListener("click", addTask);
-  if (taskInput) {
-    taskInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") addTask();
-    });
-  }
-
-  if (clearAllBtn) clearAllBtn.addEventListener("click", clearAllTasks);
-
-  if (filterBtns && filterBtns.length) {
-    filterBtns.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        filterBtns.forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        currentFilter = btn.dataset.filter;
-        renderTasks();
-      });
-    });
-  }
-
-  if (sortColumns && sortColumns.length) {
-    sortColumns.forEach((col) => {
-      col.addEventListener("click", () => {
-        sortTasks(col.dataset.sort);
-      });
-    });
-  }
-
+  // --- Sort Button ---
   if (sortTasksBtn) {
     sortTasksBtn.addEventListener("click", () => {
-      sortTasks("title");
-    });
-  }
-
-  if (cityInput) {
-    cityInput.addEventListener("input", () => debouncedFetchWeather(cityInput.value.trim()));
-    cityInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        clearTimeout(weatherSearchTimeout);
-        fetchWeather(cityInput.value.trim());
+      if (sortState.key === "title") {
+        sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
+      } else {
+        sortState.key = "title";
+        sortState.direction = "asc";
       }
+      saveSortState();
+      renderTasks();
     });
   }
 
-  if (searchWeatherBtn) {
-    searchWeatherBtn.addEventListener("click", () => {
-      clearTimeout(weatherSearchTimeout);
-      const city = cityInput ? cityInput.value.trim() : "";
-      fetchWeather(city);
-    });
-  }
-
-  if (themeToggle) {
-    themeToggle.addEventListener("click", () => document.body.classList.toggle("dark-theme"));
-  }
-
-  const navLinks = document.querySelectorAll(".nav-link");
-  if (navLinks && navLinks.length) {
-    navLinks.forEach((link) => {
-      link.addEventListener("click", (e) => {
-        navLinks.forEach((l) => l.classList.remove("active"));
-        e.currentTarget.classList.add("active");
-      });
-    });
-  }
-
+  // --- Init ---
   function init() {
     renderTasks();
     if (yearSpan) yearSpan.textContent = new Date().getFullYear();
-    fetchWeather("London");
+    getLocationWeather();
   }
 
   init();
