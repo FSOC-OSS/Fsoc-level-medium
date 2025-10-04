@@ -699,3 +699,34 @@ footer nav .nav-links {
 .task-item {
     transition: background 0.2s, transform 0.3s;
 }
+
+#due-date-input {
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: rgba(255,255,255,0.7);
+    transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+#due-date-input:focus {
+    border: 1.5px solid var(--primary-color);
+    box-shadow: 0 2px 8px rgba(79,140,255,0.08);
+}
+
+.overdue-task {
+    background: #ffeaea !important;
+    border-left: 4px solid #dc3545;
+    animation: overduePulse 1s infinite alternate;
+}
+.overdue-date {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+@keyframes overduePulse {
+    from { background: #ffeaea; }
+    to { background: #fff5f5; }
+}

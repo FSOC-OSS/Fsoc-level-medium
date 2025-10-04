@@ -30,47 +30,165 @@ listViewBtn.addEventListener("click", () => setViewMode("list"));
 gridViewBtn.addEventListener("click", () => setViewMode("grid"));
 compactViewBtn.addEventListener("click", () => setViewMode("compact"));
 document.addEventListener("DOMContentLoaded", () => {
-    // --- Task Manager Setup ---
-    const taskInput = document.getElementById("task-input");
-    const addTaskBtn = document.getElementById("add-task-btn");
-    const taskList = document.getElementById("task-list");
-    const clearAllBtn = document.getElementById("clear-all-btn");
-    const filterBtns = document.querySelectorAll(".filter-btn");
-    const sortTasksBtn = document.getElementById("sort-tasks-btn");
+  // --- Task Manager Setup ---
+  const taskInput = document.getElementById("task-input");
+  const dueDateInput = document.getElementById("due-date-input"); // NEW
+  const addTaskBtn = document.getElementById("add-task-btn");
+  const taskList = document.getElementById("task-list");
+  const clearAllBtn = document.getElementById("clear-all-btn");
+  const filterBtns = document.querySelectorAll(".filter-btn");
+  const sortTasksBtn = document.getElementById("sort-tasks-btn");
 
-    // --- Weather Widget Setup ---
-    const cityInput = document.getElementById("city-input");
-    const searchWeatherBtn = document.getElementById("search-weather-btn");
-    const getLocationBtn = document.getElementById("get-location-btn");
-    const weatherInfo = document.getElementById("weather-info");
-    const themeToggle = document.getElementById("theme-toggle");
-    const yearSpan = document.getElementById("year");
+  // --- Weather Widget Setup ---
+  const cityInput = document.getElementById("city-input");
+  const searchWeatherBtn = document.getElementById("search-weather-btn");
+  const getLocationBtn = document.getElementById("get-location-btn");
+  const weatherInfo = document.getElementById("weather-info");
+  const themeToggle = document.getElementById("theme-toggle");
+  const yearSpan = document.getElementById("year");
 
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    let currentFilter = "all";
-    let weatherSearchTimeout = null;
+  let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+  let currentFilter = "all";
+  let weatherSearchTimeout = null;
 
-    // --- Sorting State ---
-    let sortState = JSON.parse(localStorage.getItem("sortState")) || {
-        key: "title",
-        direction: "asc",
+  // --- Sorting State ---
+  let sortState = JSON.parse(localStorage.getItem("sortState")) || {
+    key: "title",
+    direction: "asc"
+  };
+
+  // --- Weather API Key ---
+  const weatherApiKey = "4b1ee5452a2e3f68205153f28bf93927";
+  const DEBOUNCE_DELAY = 500;
+  const WEATHER_TIMEOUT_MS = 8000;
+  const MAX_RETRIES = 3;
+
+  // --- Utility Functions ---
+  function debounce(func, delay) {
+    return function (...args) {
+      clearTimeout(weatherSearchTimeout);
+      weatherSearchTimeout = setTimeout(() => func.apply(this, args), delay);
+    };
+  }
+
+  function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+
+  function saveSortState() {
+    localStorage.setItem("sortState", JSON.stringify(sortState));
+  }
+
+  // --- Task Data Model ---
+  // Each task: { text, completed, created, priority, dueDate }
+  function addTask() {
+    const text = taskInput.value.trim();
+    const dueDate = dueDateInput.value ? dueDateInput.value : null;
+    if (!text) return;
+    const newTask = {
+      text,
+      completed: false,
+      created: Date.now(),
+      priority: 2, // default priority: 1=High, 2=Medium, 3=Low
+      dueDate
+    };
+    tasks.push(newTask);
+    saveTasks();
+    taskInput.value = "";
+    dueDateInput.value = "";
+    renderTasks();
+  }
+
+  function deleteTask(index) {
+    tasks.splice(index, 1);
+    saveTasks();
+    renderTasks();
+  }
+
+  function clearAllTasks() {
+    tasks = [];
+    saveTasks();
+    renderTasks();
+  }
+
+  function toggleTaskCompletion(index) {
+    tasks[index].completed = !tasks[index].completed;
+    saveTasks();
+    renderTasks();
+  }
+
+  function enableInlineEdit(index, spanEl) {
+    if (spanEl.parentElement.querySelector(".task-edit-input")) return;
+    const originalText = tasks[index].text;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = originalText;
+    input.className = "task-edit-input";
+    spanEl.replaceWith(input);
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+
+    const saveChanges = () => {
+      const newText = input.value.trim();
+      tasks[index].text = newText || originalText;
+      saveTasks();
+      renderTasks();
     };
 
-    // --- Weather API Key ---
-    const weatherApiKey = "4b1ee5452a2e3f68205153f28bf93927";
-    const DEBOUNCE_DELAY = 500;
-    const WEATHER_TIMEOUT_MS = 8000;
-    const MAX_RETRIES = 3;
+    input.addEventListener("blur", saveChanges);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") input.blur();
+      else if (e.key === "Escape") {
+        input.value = originalText;
+        input.blur();
+      }
+    });
+  }
 
-    // --- Utility Functions ---
-    function debounce(func, delay) {
-        return function (...args) {
-            clearTimeout(weatherSearchTimeout);
-            weatherSearchTimeout = setTimeout(
-                () => func.apply(this, args),
-                delay
-            );
-        };
+  // --- Sorting ---
+  function sortTasks(tasksArr) {
+    let sorted = [...tasksArr];
+    switch (sortState.key) {
+      case "title":
+        sorted.sort((a, b) =>
+          sortState.direction === "asc"
+            ? a.text.localeCompare(b.text)
+            : b.text.localeCompare(a.text)
+        );
+        break;
+      case "date":
+        sorted.sort((a, b) =>
+          sortState.direction === "asc"
+            ? a.created - b.created
+            : b.created - a.created
+        );
+        break;
+      case "priority":
+        sorted.sort((a, b) =>
+          sortState.direction === "asc"
+            ? a.priority - b.priority
+            : b.priority - a.priority
+        );
+        break;
+      case "status":
+        sorted.sort((a, b) =>
+          sortState.direction === "asc"
+            ? a.completed - b.completed
+            : b.completed - a.completed
+        );
+        break;
+      case "dueDate":
+        sorted.sort((a, b) => {
+          if (!a.dueDate && !b.dueDate) return 0;
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return sortState.direction === "asc"
+            ? new Date(a.dueDate) - new Date(b.dueDate)
+            : new Date(b.dueDate) - new Date(a.dueDate);
+        });
+        break;
+      default:
+        break;
     }
 
     function saveTasks() {
@@ -81,22 +199,100 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("sortState", JSON.stringify(sortState));
     }
 
-    // --- Task Data Model ---
-    // Each task: { text, completed, created, priority }
-    function addTask() {
-        const text = taskInput.value.trim();
-        if (!text) return;
-        const newTask = {
-            text,
-            completed: false,
-            created: Date.now(),
-            priority: 2, // default priority: 1=High, 2=Medium, 3=Low
-        };
-        tasks.push(newTask);
-        saveTasks();
-        taskInput.value = "";
-        renderTasks();
-    }
+    // Table header for sorting
+    const header = document.createElement("li");
+    header.className = "task-header";
+    header.innerHTML = `
+      <span class="sortable" data-sort="title">Title ${sortState.key === "title" ? (sortState.direction === "asc" ? "▲" : "▼") : ""}</span>
+      <span class="sortable" data-sort="date">Date Added ${sortState.key === "date" ? (sortState.direction === "asc" ? "▲" : "▼") : ""}</span>
+      <span class="sortable" data-sort="dueDate">Due Date ${sortState.key === "dueDate" ? (sortState.direction === "asc" ? "▲" : "▼") : ""}</span>
+      <span class="sortable" data-sort="priority">Priority ${sortState.key === "priority" ? (sortState.direction === "asc" ? "▲" : "▼") : ""}</span>
+      <span class="sortable" data-sort="status">Status ${sortState.key === "status" ? (sortState.direction === "asc" ? "▲" : "▼") : ""}</span>
+      <span></span>
+    `;
+    header.style.fontWeight = "bold";
+    header.style.background = "rgba(0,0,0,0.03)";
+    header.style.borderBottom = "1px solid var(--border-color)";
+    header.style.display = "grid";
+    header.style.gridTemplateColumns = "2fr 1fr 1fr 1fr 1fr 0.5fr";
+    header.style.alignItems = "center";
+    header.style.padding = "0.5rem 0.5rem";
+    taskList.appendChild(header);
+
+    filteredTasks.forEach((task, idx) => {
+      const originalIndex = tasks.findIndex((t) => t === task);
+      const li = document.createElement("li");
+      li.className = "task-item";
+      li.dataset.index = originalIndex;
+      li.style.display = "grid";
+      li.style.gridTemplateColumns = "2fr 1fr 1fr 1fr 1fr 0.5fr";
+      li.style.alignItems = "center";
+      li.style.padding = "0.5rem 0.5rem";
+      li.style.transition = "background 0.2s";
+
+      // Highlight overdue tasks
+      let isOverdue = false;
+      if (task.dueDate && !task.completed) {
+        const now = new Date();
+        const due = new Date(task.dueDate);
+        if (due < now.setHours(0,0,0,0)) {
+          li.classList.add("overdue-task");
+          isOverdue = true;
+        }
+      }
+
+      // Title
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = task.completed;
+      checkbox.dataset.action = "toggle";
+      checkbox.style.marginRight = "0.5rem";
+
+      const taskText = document.createElement("span");
+      taskText.textContent = task.text;
+      if (task.completed) taskText.classList.add("completed");
+      taskText.dataset.action = "edit";
+
+      const titleCell = document.createElement("span");
+      titleCell.appendChild(checkbox);
+      titleCell.appendChild(taskText);
+
+      // Date Added
+      const dateCell = document.createElement("span");
+      const dateObj = new Date(task.created);
+      dateCell.textContent = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Due Date
+      const dueDateCell = document.createElement("span");
+      dueDateCell.textContent = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "-";
+      if (isOverdue) dueDateCell.classList.add("overdue-date");
+
+      // Priority
+      const priorityCell = document.createElement("span");
+      let priorityText = "Medium";
+      if (task.priority === 1) priorityText = "High";
+      if (task.priority === 3) priorityText = "Low";
+      priorityCell.textContent = priorityText;
+
+      // Status
+      const statusCell = document.createElement("span");
+      statusCell.textContent = task.completed ? "Done" : "Active";
+      statusCell.style.color = task.completed ? "var(--completed-color)" : "var(--primary-color)";
+
+      // Delete
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.textContent = "🗑️";
+      deleteBtn.dataset.action = "delete";
+
+      li.appendChild(titleCell);
+      li.appendChild(dateCell);
+      li.appendChild(dueDateCell);
+      li.appendChild(priorityCell);
+      li.appendChild(statusCell);
+      li.appendChild(deleteBtn);
+      taskList.appendChild(li);
+    });
 
     function deleteTask(index) {
         tasks.splice(index, 1);
@@ -477,12 +673,28 @@ document.addEventListener("DOMContentLoaded", () => {
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
     }
+  });
+  searchWeatherBtn.addEventListener("click", () => {
+    fetchWeather(cityInput.value.trim());
+  });
+  getLocationBtn.addEventListener("click", getLocationWeather);
 
-    // --- Weather Search Events ---
-    cityInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-            fetchWeather(cityInput.value.trim());
-        }
+  // --- Task Events ---
+  addTaskBtn.addEventListener("click", addTask);
+  taskInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addTask();
+  });
+  dueDateInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addTask();
+  });
+  clearAllBtn.addEventListener("click", clearAllTasks);
+
+  filterBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      filterBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentFilter = btn.dataset.filter;
+      renderTasks();
     });
     searchWeatherBtn.addEventListener("click", () => {
         fetchWeather(cityInput.value.trim());
