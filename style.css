@@ -630,3 +630,74 @@ margin-left: 600px;
 
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes shrink { from { width: 100%; } to { width: 0; } }
+.task-header {
+  background: rgba(0,0,0,0.03);
+  font-weight: bold;
+  border-bottom: 1px solid var(--border-color);
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
+  align-items: center;
+  padding: 0.5rem 0.5rem;
+}
+
+.task-header .sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+.task-header .sortable:hover {
+  color: var(--primary-color);
+}
+
+.task-item {
+  transition: background 0.2s, transform 0.3s;
+}
+
+#due-date-input {
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: rgba(255,255,255,0.7);
+    transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+#due-date-input:focus {
+    border: 1.5px solid var(--primary-color);
+    box-shadow: 0 2px 8px rgba(79,140,255,0.08);
+}
+
+.overdue-task {
+    background: #ffeaea !important;
+    border-left: 4px solid #dc3545;
+    animation: overduePulse 1s infinite alternate;
+}
+.overdue-date {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+@keyframes overduePulse {
+    from { background: #ffeaea; }
+    to { background: #fff5f5; }
+}
+
+.input-error {
+  color: #dc3545;
+  font-size: 0.95rem;
+  margin-left: 0.5rem;
+  display: block;
+  font-weight: 500;
+}
+
+.input-invalid {
+  border: 2px solid #dc3545 !important;
+  background: #ffeaea !important;
+}
+
+.input-valid {
+  border: 2px solid #28a745 !important;
+  background: #e6fff2 !important;
+}
