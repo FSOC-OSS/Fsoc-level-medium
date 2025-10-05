@@ -48,6 +48,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const WEATHER_TIMEOUT_MS = 8000;
   const MAX_RETRIES = 3;
 
+    // Hamburger Functionality
+    const hamburger = document.getElementById("hamburger");
+const sidebar = document.getElementById("sidebar");
+const closeBtn = document.getElementById("close-btn");
+const hamburgertabs = document.getElementById("hamburger-tabs")
+
+hamburger.addEventListener("click", () => {
+  sidebar.classList.add("active");
+});
+
+hamburgertabs.addEventListener("click",()=>{
+  sidebar.classList.remove("active");
+})
+
+
+closeBtn.addEventListener("click", () => {
+  sidebar.classList.remove("active");
+});
+
   // --- Validation State ---
   let taskInputError = taskInput.parentNode.querySelector(".input-error");
   if (!taskInputError) {

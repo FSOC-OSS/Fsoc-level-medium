@@ -58,6 +58,8 @@ body {
     transition: background 0.5s, color 0.3s;
 }
 
+
+
 .container {
     max-width: 1200px;
     margin: 2rem auto;
@@ -953,6 +955,87 @@ footer .footer-nav a:hover {
   100% { transform: translateX(100%); }
 }
 
+.hamburger {
+  font-size: 28px;
+  cursor: pointer;
+  padding: 15px;
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  background:var(--primary-color);
+  color: white;
+  border-radius: 6px;
+  z-index: 1001;
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -250px; /* Hidden by default */
+  width: 250px;
+  height: 100%;
+  background-color: var(--primary-color);
+  color: white;
+  padding-top: 60px;
+  transition: right 0.3s ease;
+  z-index: 1000;
+}
+
+/* Sidebar active state */
+.sidebar.active {
+  right: 0;
+}
+
+/* Close button */
+.close-btn {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/* Sidebar links */
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  padding: 15px 20px;
+}
+
+.sidebar a {
+  text-decoration: none;
+  color: white;
+  display: block;
+}
+
+.sidebar a:hover {
+  background-color: #333;
+  border-radius: 4px;
+}
+@media only screen and (max-width: 600px) {
+    
+    nav ul{
+    visibility: hidden;
+  }
+
+  nav{
+    flex-direction: column;
+  }
+  
+  .container{
+    display: flex;
+    flex-direction: column;
+  }
+
+  
+}
 /* Drag & Drop styles */
 .drag-clone {
     box-shadow: 0 12px 30px rgba(0,0,0,0.18);
