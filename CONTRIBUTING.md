@@ -9,11 +9,12 @@ Follow the steps below to make your first pull request and get it counted for Ha
 2. Clone your forked repo  
    ```bash
    git clone https://github.com/<your-username>/<repo-name>.git
-3.create a new branch
+3. create a new branch
     git checkout -b my-new-branch
-4.Make your changes
-5.Commit and push
-    git add .
-    git commit -m "Added my contribution"
-    git push origin my-new-branch
-6.Open a Pull Request ✅
+4. Make your changes
+5. Commit and push
+    ```bash
+    - git add .
+    - git commit -m "Added my contribution"
+    - git push origin my-new-branch
+6. Open a Pull Request ✅
