@@ -1074,3 +1074,91 @@ body.modal-open {
     }
 }
 
+
+
+/* --- Responsive Grid Layout & View Modes --- */
+.view-mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+.view-mode-btn {
+    background: none;
+    border: 1.5px solid var(--border-color);
+    color: var(--secondary-color);
+    font-weight: 500;
+    padding: 0.5rem 1.2rem;
+    border-radius: 7px;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    cursor: pointer;
+}
+.view-mode-btn.active {
+    background: linear-gradient(90deg, var(--primary-color) 60%, var(--primary-hover-color) 100%);
+    color: #fff;
+    border: 1.5px solid var(--primary-hover-color);
+}
+.view-mode-btn:hover {
+    background: rgba(79,140,255,0.08);
+    color: var(--primary-color);
+    border: 1.5px solid var(--primary-color);
+}
+#task-list.list-mode .task-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 0.5fr;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 1rem 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+#task-list.grid-mode {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+}
+#task-list.grid-mode .task-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background: var(--card-bg-color);
+    border-radius: 14px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    border: 1px solid var(--border-color);
+    padding: 1.2rem 1rem;
+    margin: 0;
+    min-height: 180px;
+    gap: 0.7rem;
+}
+#task-list.compact-mode .task-item {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 0.7fr;
+    gap: 0.3rem;
+    align-items: center;
+    padding: 0.6rem 0.3rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+}
+@media (max-width: 900px) {
+    #task-list.grid-mode {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.8rem;
+    }
+    #task-list.list-mode .task-item,
+    #task-list.compact-mode .task-item {
+        grid-template-columns: 1.5fr 1fr 1fr 0.7fr;
+        font-size: 0.98rem;
+    }
+}
+@media (max-width: 600px) {
+    #task-list.grid-mode {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    #task-list.list-mode .task-item,
+    #task-list.compact-mode .task-item {
+        grid-template-columns: 1fr 1fr;
+        font-size: 0.95rem;
+        padding: 0.5rem 0.2rem;
+    }
+}
+n
