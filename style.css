@@ -598,3 +598,40 @@ margin-left: 600px;
     outline: 2px solid #007bff;
     background: #e6f0ff;
 }
+.modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s;
+}
+.modal {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    min-width: 320px;
+    max-width: 90vw;
+    padding: 2rem;
+    animation: modalFadeIn 0.3s;
+    outline: none;
+}
+@keyframes modalFadeIn {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.modal-content h3 {
+    margin-top: 0;
+}
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+body.modal-open {
+    overflow: hidden;
+}

@@ -444,3 +444,84 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
 
   init();
 });
+const modalBackdrop = document.getElementById('modal-backdrop');
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modal-title');
+const modalBody = document.getElementById('modal-body');
+const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+const modalCancelBtn = document.getElementById('modal-cancel-btn');
+const modalCloseBtn = document.getElementById('modal-close-btn');
+
+let lastFocusedElement = null;
+let confirmCallback = null;
+let cancelCallback = null;
+
+function openModal({ title, body, type = 'alert', onConfirm, onCancel }) {
+    lastFocusedElement = document.activeElement;
+    modalTitle.textContent = title || '';
+    modalBody.innerHTML = body || '';
+    modalBackdrop.style.display = 'flex';
+    document.body.classList.add('modal-open');
+    modal.setAttribute('tabindex', '-1');
+    modal.focus();
+
+    // Show/hide buttons based on type
+    modalConfirmBtn.style.display = type === 'confirm' ? '' : 'none';
+    modalCancelBtn.style.display = type === 'confirm' ? '' : 'none';
+    modalCloseBtn.style.display = type === 'alert' || type === 'form' ? '' : 'none';
+
+    confirmCallback = typeof onConfirm === 'function' ? onConfirm : null;
+    cancelCallback = typeof onCancel === 'function' ? onCancel : null;
+}
+
+function closeModal() {
+    modalBackdrop.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    if (lastFocusedElement) lastFocusedElement.focus();
+    confirmCallback = null;
+    cancelCallback = null;
+}
+
+// Button events
+modalConfirmBtn.onclick = () => {
+    if (confirmCallback) confirmCallback();
+    closeModal();
+};
+modalCancelBtn.onclick = () => {
+    if (cancelCallback) cancelCallback();
+    closeModal();
+};
+modalCloseBtn.onclick = closeModal;
+
+// Keyboard accessibility
+modalBackdrop.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
+    // Focus trap
+    const focusable = modalBackdrop.querySelectorAll('button, [tabindex]:not([tabindex="-1"])');
+    if (e.key === 'Tab') {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+            last.focus();
+            e.preventDefault();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            first.focus();
+            e.preventDefault();
+        }
+    }
+});
+openModal({ title: 'Alert', body: 'Something happened!', type: 'alert' });
+openModal({
+  title: 'Confirm',
+  body: 'Are you sure?',
+  type: 'confirm',
+  onConfirm: () => { /* do something */ },
+  onCancel: () => { /* do something else */ }
+});
+openModal({
+  title: 'Edit Task',
+  body: '<form>...</form>',
+  type: 'form'
+});
