@@ -17,9 +17,20 @@
         ></script>
     </head>
     <body>
+        <div class="sidebar" id="sidebar">
+  <button class="close-btn" id="close-btn">×</button>
+  <ul>
+    <li><a href="#dashboard" id="hamburger-tabs">Home</a></li>
+    <li><a href="about.html" id="hamburger-tabs">About</a></li>
+    <li><a href="contact.html" id="hamburger-tabs">Contact</a></li>
+  </ul>
+</div>
         <header>
             <nav>
                 <div class="logo">Fsoc-Medium</div>
+                <div class="hamburger" id="hamburger">
+  ☰
+</div>
                 <ul class="nav-links">
                     <li>
                         <a href="#dashboard" class="nav-link active"
@@ -117,6 +128,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="view-mode-toggle">
+                    <button class="view-mode-btn" id="list-mode-btn">List</button>
+                    <button class="view-mode-btn" id="grid-mode-btn">Grid</button>
+                    <button class="view-mode-btn" id="compact-mode-btn">Compact</button>
+                </div>
                 <ul id="task-list"></ul>
                 <div class="task-actions">
                     <button id="sort-priority-btn">Sort by Priority</button>
@@ -163,6 +179,438 @@
                 <a href="index.html">Dashboard</a> |
                 <a href="about.html">About</a> | <a href="#contact">Contact</a>
             </div>
+
+            {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      color: #333;
+      padding: 40px;
+    }
+    h1 { text-align: center; }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    input {
+      padding: 10px;
+      width: 70%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    li {
+      background: white;
+      border: 1px solid #ddd;
+      margin-bottom: 8px;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Undo/Redo Command Pattern</h1>
+  <div class="container">
+    <input type="text" id="taskInput" placeholder="Enter task" />
+    <button id="addTaskBtn">Add Task</button>
+    <button id="undoBtn" disabled>Undo (Ctrl+Z)</button>
+    <button id="redoBtn" disabled>Redo (Ctrl+Y)</button>
+    <button id="clearHistoryBtn">Clear History</button>
+
+    <ul id="taskList"></ul>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Manager with Tags</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+    padding: 20px;
+  }
+  h1 { text-align: center; }
+  #task-input, #tag-input {
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+  #add-task-btn, #add-tag-btn {
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  #task-list, #tag-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .task-item {
+    background: #fff;
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  .tag-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-right: 5px;
+    margin-top: 5px;
+    cursor: pointer;
+    color: #fff;
+  }
+  .tag-badge:hover {
+    opacity: 0.8;
+  }
+  .filter-active {
+    border: 2px solid #000;
+  }
+</style>
+</head>
+<body>
+
+<h1>Task Manager with Tags</h1>
+
+<div style="text-align:center;">
+  <input type="text" id="task-input" placeholder="Enter a new task">
+  <button id="add-task-btn">Add Task</button>
+  <br>
+  <input type="text" id="tag-input" placeholder="Enter a new tag (e.g., Work)" maxlength="15">
+  <input type="color" id="tag-color" value="#007BFF">
+  <button id="add-tag-btn">Add Tag</button>
+</div>
+
+<ul id="tag-list"></ul>
+<ul id="task-list"></ul>
+
+<script src="script.js"></script>
+</body>
+</html>
+
+{
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+button {
+  padding: 10px 15px;
+  margin: 5px;
+  cursor: pointer;
+}
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+}
+.modal.show {
+  display: flex;
+}
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+  max-width: 500px;
+  transform: translateY(-50px);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+.modal.show .modal-content {
+  transform: translateY(0);
+  opacity: 1;
+}
+.modal-buttons {
+  margin-top: 20px;
+  text-align: right;
+}
+.modal-btn {
+  padding: 8px 12px;
+  margin-left: 10px;
+}
+</style>
+</head>
+<body>
+
+<h1>Reusable Modal Demo</h1>
+<button id="open-alert">Open Alert Modal</button>
+<button id="open-confirm">Open Confirm Modal</button>
+<button id="open-form">Open Form Modal</button>
+
+<!-- Modal Container -->
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-content">
+  <div class="modal-content">
+    <h2 id="modal-title"></h2>
+    <div id="modal-content"></div>
+    <div class="modal-buttons">
+      <button id="modal-cancel" class="modal-btn">Cancel</button>
+      <button id="modal-confirm" class="modal-btn">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Include JS at the end of body to ensure elements exist -->
+<script>
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modal-title');
+const modalContent = document.getElementById('modal-content');
+const btnCancel = document.getElementById('modal-cancel');
+const btnConfirm = document.getElementById('modal-confirm');
+
+let activeElementBeforeModal = null;
+let onConfirmCallback = null;
+let onCancelCallback = null;
+const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+// Open modal
+function openModal({ title = '', content = '', type = 'alert', onConfirm = null, onCancel = null }) {
+  activeElementBeforeModal = document.activeElement;
+  modalTitle.textContent = title;
+  modalContent.innerHTML = content;
+  onConfirmCallback = onConfirm;
+  onCancelCallback = onCancel;
+
+  if (type === 'alert') {
+    btnConfirm.style.display = 'inline-block';
+    btnCancel.style.display = 'none';
+  } else {
+    btnConfirm.style.display = 'inline-block';
+    btnCancel.style.display = 'inline-block';
+  }
+
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  // Focus first element
+  const focusables = modal.querySelectorAll(focusableSelectors);
+  if (focusables.length) focusables[0].focus();
+}
+
+// Close modal
+function closeModal() {
+  modal.classList.remove('show');
+  document.body.style.overflow = '';
+  if (activeElementBeforeModal) activeElementBeforeModal.focus();
+  onConfirmCallback = null;
+  onCancelCallback = null;
+}
+
+// Button events
+btnConfirm.addEventListener('click', () => { if (onConfirmCallback) onConfirmCallback(); closeModal(); });
+btnCancel.addEventListener('click', () => { if (onCancelCallback) onCancelCallback(); closeModal(); });
+
+// Click outside modal
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+// ESC & focus trap
+document.addEventListener('keydown', e => {
+  if (!modal.classList.contains('show')) return;
+
+  if (e.key === 'Escape') { if (onCancelCallback) onCancelCallback(); closeModal(); }
+
+  if (e.key === 'Tab') {
+    const focusables = [...modal.querySelectorAll(focusableSelectors)];
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+
+// Demo buttons
+document.getElementById('open-alert').addEventListener('click', () => {
+  openModal({ title: 'Alert', content: 'This is an alert modal!', type: 'alert' });
+});
+
+document.getElementById('open-confirm').addEventListener('click', () => {
+  openModal({
+    title: 'Confirm',
+    content: 'Do you want to proceed?',
+    type: 'confirm',
+    onConfirm: () => alert('Confirmed!'),
+    onCancel: () => alert('Cancelled!')
+  });
+});
+
+document.getElementById('open-form').addEventListener('click', () => {
+  openModal({
+    title: 'Form',
+    content: `<form>
+                <label>Name: <input type="text" /></label><br/><br/>
+                <label>Email: <input type="email" /></label>
+              </form>`,
+    type: 'form',
+    onConfirm: () => alert('Form submitted!'),
+    onCancel: () => alert('Form cancelled!')
+  });
+});
+</script>
+
+{ font-family: Arial, sans-serif; padding: 20px; }
+button { padding: 8px 12px; margin: 5px; cursor: pointer; }
+#task-list { margin-top: 20px; list-style: none; padding: 0; }
+.task-item { padding: 5px 10px; border: 1px solid #ccc; margin-bottom: 5px; border-radius: 4px; }
+.data-btn { margin-top: 15px; display: block; }
+</style>
+</head>
+<body>
+
+<h1>Task Manager with Data Persistence</h1>
+
+<input type="text" id="task-input" placeholder="Enter new task">
+<button id="add-task-btn" type="button">Add Task</button>
+
+<ul id="task-list"></ul>
+
+<h2>Data Management</h2>
+<button id="export-btn" type="button" class="data-btn">Export Data</button>
+<input type="file" id="import-file" style="display:none">
+<button id="import-btn" type="button" class="data-btn">Import Data</button>
+<button id="clear-btn" type="button" class="data-btn">Clear All Data</button>
+
+<script>
+(() => {
+  // --- Task Management ---
+  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+  const taskInput = document.getElementById('task-input');
+  const addTaskBtn = document.getElementById('add-task-btn');
+  const taskList = document.getElementById('task-list');
+  const exportBtn = document.getElementById('export-btn');
+  const importBtn = document.getElementById('import-btn');
+  const importFile = document.getElementById('import-file');
+  const clearBtn = document.getElementById('clear-btn');
+
+  function renderTasks() {
+    taskList.innerHTML = '';
+    tasks.forEach((task) => {
+      const li = document.createElement('li');
+      li.textContent = task;
+      li.className = 'task-item';
+      taskList.appendChild(li);
+    });
+  }
+
+  function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
+
+  addTaskBtn.addEventListener('click', () => {
+    const task = taskInput.value.trim();
+    if (!task) return alert('Enter a task!');
+    tasks.push(task);
+    taskInput.value = '';
+    renderTasks();
+    saveTasks();
+  });
+
+  // Initial render
+  renderTasks();
+
+  // --- Export JSON ---
+  exportBtn.addEventListener('click', () => {
+    const data = { tasks };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'task-manager-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // --- Import JSON ---
+  importBtn.addEventListener('click', () => importFile.click());
+
+  importFile.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const importedData = JSON.parse(evt.target.result);
+        if (!importedData.tasks || !Array.isArray(importedData.tasks)) {
+          return alert('Invalid JSON file!');
+        }
+        tasks = importedData.tasks;
+        renderTasks();
+        saveTasks();
+        alert('Data imported successfully!');
+      } catch (err) {
+        alert('Failed to import JSON: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // --- Clear All Data ---
+  clearBtn.addEventListener('click', () => {
+    if (!confirm('Are you sure you want to clear all data?')) return;
+    tasks = [];
+    localStorage.removeItem('tasks');
+    renderTasks();
+    alert('All data cleared.');
+  });
+})();
+</script>
         </footer>
 
         <script src="script.js"></script>

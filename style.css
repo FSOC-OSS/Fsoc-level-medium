@@ -1,4 +1,4 @@
-/* --- Root Variables for Theming --- */
+/* --- Root Variables for Theming ---h */ 
 :root {
     --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #f4f7f9 100%);
     --bg-color: #f4f7f9;
@@ -57,6 +57,8 @@ body {
     min-height: 100vh;
     transition: background 0.5s, color 0.3s;
 }
+
+
 
 .container {
     max-width: 1200px;
