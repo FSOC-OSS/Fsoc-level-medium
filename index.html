@@ -322,6 +322,57 @@
 </body>
 </html>
 
+{
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+button {
+  padding: 10px 15px;
+  margin: 5px;
+  cursor: pointer;
+}
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+}
+.modal.show {
+  display: flex;
+}
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+  max-width: 500px;
+  transform: translateY(-50px);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+.modal.show .modal-content {
+  transform: translateY(0);
+  opacity: 1;
+}
+.modal-buttons {
+  margin-top: 20px;
+  text-align: right;
+}
+.modal-btn {
+  padding: 8px 12px;
+  margin-left: 10px;
+}
+</style>
+</head>
+<body>
+
 <h1>Reusable Modal Demo</h1>
 <button id="open-alert">Open Alert Modal</button>
 <button id="open-confirm">Open Confirm Modal</button>
@@ -338,6 +389,104 @@
     </div>
   </div>
 </div>
+
+<!-- Include JS at the end of body to ensure elements exist -->
+<script>
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modal-title');
+const modalContent = document.getElementById('modal-content');
+const btnCancel = document.getElementById('modal-cancel');
+const btnConfirm = document.getElementById('modal-confirm');
+
+let activeElementBeforeModal = null;
+let onConfirmCallback = null;
+let onCancelCallback = null;
+const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+// Open modal
+function openModal({ title = '', content = '', type = 'alert', onConfirm = null, onCancel = null }) {
+  activeElementBeforeModal = document.activeElement;
+  modalTitle.textContent = title;
+  modalContent.innerHTML = content;
+  onConfirmCallback = onConfirm;
+  onCancelCallback = onCancel;
+
+  if (type === 'alert') {
+    btnConfirm.style.display = 'inline-block';
+    btnCancel.style.display = 'none';
+  } else {
+    btnConfirm.style.display = 'inline-block';
+    btnCancel.style.display = 'inline-block';
+  }
+
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  // Focus first element
+  const focusables = modal.querySelectorAll(focusableSelectors);
+  if (focusables.length) focusables[0].focus();
+}
+
+// Close modal
+function closeModal() {
+  modal.classList.remove('show');
+  document.body.style.overflow = '';
+  if (activeElementBeforeModal) activeElementBeforeModal.focus();
+  onConfirmCallback = null;
+  onCancelCallback = null;
+}
+
+// Button events
+btnConfirm.addEventListener('click', () => { if (onConfirmCallback) onConfirmCallback(); closeModal(); });
+btnCancel.addEventListener('click', () => { if (onCancelCallback) onCancelCallback(); closeModal(); });
+
+// Click outside modal
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+// ESC & focus trap
+document.addEventListener('keydown', e => {
+  if (!modal.classList.contains('show')) return;
+
+  if (e.key === 'Escape') { if (onCancelCallback) onCancelCallback(); closeModal(); }
+
+  if (e.key === 'Tab') {
+    const focusables = [...modal.querySelectorAll(focusableSelectors)];
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+
+// Demo buttons
+document.getElementById('open-alert').addEventListener('click', () => {
+  openModal({ title: 'Alert', content: 'This is an alert modal!', type: 'alert' });
+});
+
+document.getElementById('open-confirm').addEventListener('click', () => {
+  openModal({
+    title: 'Confirm',
+    content: 'Do you want to proceed?',
+    type: 'confirm',
+    onConfirm: () => alert('Confirmed!'),
+    onCancel: () => alert('Cancelled!')
+  });
+});
+
+document.getElementById('open-form').addEventListener('click', () => {
+  openModal({
+    title: 'Form',
+    content: `<form>
+                <label>Name: <input type="text" /></label><br/><br/>
+                <label>Email: <input type="email" /></label>
+              </form>`,
+    type: 'form',
+    onConfirm: () => alert('Form submitted!'),
+    onCancel: () => alert('Form cancelled!')
+  });
+});
+</script>
 
         </footer>
         <script src="script.js"></script>

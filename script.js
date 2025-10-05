@@ -1767,118 +1767,112 @@ tagList.addEventListener('click', e => {
 renderTags();
 renderTasks();
 
-const modal = document.getElementById('modal');
-const modalTitle = document.getElementById('modal-title');
-const modalContent = document.getElementById('modal-content');
-const btnCancel = document.getElementById('modal-cancel');
-const btnConfirm = document.getElementById('modal-confirm');
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('modal');
+  const modalTitle = document.getElementById('modal-title');
+  const modalContent = document.getElementById('modal-content');
+  const btnCancel = document.getElementById('modal-cancel');
+  const btnConfirm = document.getElementById('modal-confirm');
 
-let activeElementBeforeModal = null;
-let onConfirmCallback = null;
-let onCancelCallback = null;
+  let activeElementBeforeModal = null;
+  let onConfirmCallback = null;
+  let onCancelCallback = null;
 
-// Focusable selectors for focus trap
-const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+  const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
-// Open modal function
-function openModal({ title = '', content = '', type = 'alert', onConfirm = null, onCancel = null }) {
-  activeElementBeforeModal = document.activeElement;
-  modalTitle.textContent = title;
-  modalContent.innerHTML = content;
+  function openModal({ title = '', content = '', type = 'alert', onConfirm = null, onCancel = null }) {
+    activeElementBeforeModal = document.activeElement;
+    modalTitle.textContent = title;
+    modalContent.innerHTML = content;
 
-  onConfirmCallback = onConfirm;
-  onCancelCallback = onCancel;
+    onConfirmCallback = onConfirm;
+    onCancelCallback = onCancel;
 
-  // Show/hide buttons based on modal type
-  if (type === 'alert') {
-    btnConfirm.style.display = 'inline-block';
-    btnCancel.style.display = 'none';
-  } else if (type === 'confirm' || type === 'form') {
-    btnConfirm.style.display = 'inline-block';
-    btnCancel.style.display = 'inline-block';
+    if (type === 'alert') {
+      btnConfirm.style.display = 'inline-block';
+      btnCancel.style.display = 'none';
+    } else if (type === 'confirm' || type === 'form') {
+      btnConfirm.style.display = 'inline-block';
+      btnCancel.style.display = 'inline-block';
+    }
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    const focusables = modal.querySelectorAll(focusableSelectors);
+    if (focusables.length) focusables[0].focus();
   }
 
-  modal.classList.add('show');
-  document.body.style.overflow = 'hidden'; // Prevent background scroll
+  function closeModal() {
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+    if (activeElementBeforeModal) activeElementBeforeModal.focus();
+    onConfirmCallback = null;
+    onCancelCallback = null;
+  }
 
-  // Focus first focusable element
-  const focusables = modal.querySelectorAll(focusableSelectors);
-  if (focusables.length) focusables[0].focus();
-}
+  btnConfirm.addEventListener('click', () => {
+    if (onConfirmCallback) onConfirmCallback();
+    closeModal();
+  });
 
-// Close modal function
-function closeModal() {
-  modal.classList.remove('show');
-  document.body.style.overflow = '';
-  if (activeElementBeforeModal) activeElementBeforeModal.focus();
-  onConfirmCallback = null;
-  onCancelCallback = null;
-}
-
-// Event listeners
-btnConfirm.addEventListener('click', () => {
-  if (onConfirmCallback) onConfirmCallback();
-  closeModal();
-});
-
-btnCancel.addEventListener('click', () => {
-  if (onCancelCallback) onCancelCallback();
-  closeModal();
-});
-
-modal.addEventListener('click', e => {
-  if (e.target === modal) closeModal(); // Close when clicking outside content
-});
-
-// ESC key to close & focus trap
-document.addEventListener('keydown', e => {
-  if (!modal.classList.contains('show')) return;
-
-  if (e.key === 'Escape') {
+  btnCancel.addEventListener('click', () => {
     if (onCancelCallback) onCancelCallback();
     closeModal();
-  }
-
-  // Focus trap
-  if (e.key === 'Tab') {
-    const focusables = [...modal.querySelectorAll(focusableSelectors)];
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }
-});
-
-// Demo buttons
-document.getElementById('open-alert').addEventListener('click', () => {
-  openModal({ title: 'Alert', content: 'This is an alert modal!', type: 'alert' });
-});
-
-document.getElementById('open-confirm').addEventListener('click', () => {
-  openModal({
-    title: 'Confirm',
-    content: 'Do you want to proceed?',
-    type: 'confirm',
-    onConfirm: () => alert('Confirmed!'),
-    onCancel: () => alert('Cancelled!')
   });
-});
 
-document.getElementById('open-form').addEventListener('click', () => {
-  openModal({
-    title: 'Form',
-    content: `<form>
-                <label>Name: <input type="text" /></label><br/><br/>
-                <label>Email: <input type="email" /></label>
-              </form>`,
-    type: 'form',
-    onConfirm: () => alert('Form submitted!'),
-    onCancel: () => alert('Form cancelled!')
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closeModal();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (!modal.classList.contains('show')) return;
+
+    if (e.key === 'Escape') {
+      if (onCancelCallback) onCancelCallback();
+      closeModal();
+    }
+
+    if (e.key === 'Tab') {
+      const focusables = [...modal.querySelectorAll(focusableSelectors)];
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+
+  // Demo buttons
+  document.getElementById('open-alert').addEventListener('click', () => {
+    openModal({ title: 'Alert', content: 'This is an alert modal!', type: 'alert' });
+  });
+
+  document.getElementById('open-confirm').addEventListener('click', () => {
+    openModal({
+      title: 'Confirm',
+      content: 'Do you want to proceed?',
+      type: 'confirm',
+      onConfirm: () => alert('Confirmed!'),
+      onCancel: () => alert('Cancelled!')
+    });
+  });
+
+  document.getElementById('open-form').addEventListener('click', () => {
+    openModal({
+      title: 'Form',
+      content: `<form>
+                  <label>Name: <input type="text" /></label><br/><br/>
+                  <label>Email: <input type="email" /></label>
+                </form>`,
+      type: 'form',
+      onConfirm: () => alert('Form submitted!'),
+      onCancel: () => alert('Form cancelled!')
+    });
   });
 });
