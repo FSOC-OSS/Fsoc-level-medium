@@ -1528,4 +1528,516 @@ document.addEventListener("DOMContentLoaded", () => {
 
   init();
 
+  undo() {
+    const tasks = [...taskList.children];
+    if (this.index >= tasks.length) {
+      taskList.appendChild(this.taskElement);
+    } else {
+      taskList.insertBefore(this.taskElement, tasks[this.index]);
+    }
+  }
+}
+
+// --- Setup ---
+const taskInput = document.getElementById("taskInput");
+const addTaskBtn = document.getElementById("addTaskBtn");
+const taskList = document.getElementById("taskList");
+const undoBtn = document.getElementById("undoBtn");
+const redoBtn = document.getElementById("redoBtn");
+const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+const toast = document.getElementById("toast");
+
+const manager = new CommandManager();
+
+// --- Event Listeners ---
+addTaskBtn.addEventListener("click", () => {
+  const text = taskInput.value.trim();
+  if (text) {
+    manager.executeCommand(new AddTaskCommand(text));
+    taskInput.value = "";
+    showToast("Task added");
+  }
+});
+
+undoBtn.addEventListener("click", () => manager.undo());
+redoBtn.addEventListener("click", () => manager.redo());
+clearHistoryBtn.addEventListener("click", () => manager.clearHistory());
+
+// --- Keyboard Shortcuts ---
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.key === "z") {
+    e.preventDefault();
+    manager.undo();
+  } else if ((e.ctrlKey && e.key === "y") || (e.ctrlKey && e.shiftKey && e.key === "Z")) {
+    e.preventDefault();
+    manager.redo();
+  }
+});
+
+// --- Helper Functions ---
+function createTaskElement(text) {
+  const li = document.createElement("li");
+  li.textContent = text;
+
+  const delBtn = document.createElement("button");
+  delBtn.textContent = "Delete";
+  delBtn.addEventListener("click", () => {
+    manager.executeCommand(new DeleteTaskCommand(li));
+    showToast("Task deleted");
+  });
+
+  li.appendChild(delBtn);
+  return li;
+}
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2000);
+}
+
+function updateButtons() {
+  undoBtn.disabled = manager.undoStack.length === 0;
+  redoBtn.disabled = manager.redoStack.length === 0;
+}
+
+const shortcuts = {
+  addTask: 'Ctrl+N',
+  search: '/',
+  nextTask: 'ArrowDown',
+  prevTask: 'ArrowUp',
+  deleteTask: 'Delete',
+  openHelp: '?',
+  confirm: 'Enter',
+  cancel: 'Escape'
+};
+document.addEventListener('keydown', (e) => {
+  const key = getKeyCombo(e);
+
+  switch (key) {
+    case shortcuts.addTask:
+      e.preventDefault();
+      openAddTaskModal();
+      break;
+
+    case shortcuts.search:
+      e.preventDefault();
+      focusSearchInput();
+      break;
+
+    case shortcuts.nextTask:
+      navigateTask('next');
+      break;
+
+    case shortcuts.prevTask:
+      navigateTask('prev');
+      break;
+
+    case shortcuts.deleteTask:
+      deleteSelectedTask();
+      break;
+
+    case shortcuts.openHelp:
+      e.preventDefault();
+      toggleShortcutHelp();
+      break;
+
+    case shortcuts.confirm:
+      confirmModalAction();
+      break;
+
+    case shortcuts.cancel:
+      cancelModalAction();
+      break;
+
+    default:
+      break;
+  }
+});
+function getKeyCombo(e) {
+  let combo = '';
+  if (e.ctrlKey) combo += 'Ctrl+';
+  if (e.shiftKey) combo += 'Shift+';
+  if (e.altKey) combo += 'Alt+';
+  combo += e.key;
+  return combo;
+}
+
+const shortcuts = {
+  addTask: 'Ctrl+N',
+  search: '/',
+  nextTask: 'ArrowDown',
+  prevTask: 'ArrowUp',
+  deleteTask: 'Delete',
+  openHelp: '?',
+  confirm: 'Enter',
+  cancel: 'Escape'
+};
+document.addEventListener('keydown', (e) => {
+  const key = getKeyCombo(e);
+
+  switch (key) {
+    case shortcuts.addTask:
+      e.preventDefault();
+      openAddTaskModal();
+      break;
+
+    case shortcuts.search:
+      e.preventDefault();
+      focusSearchInput();
+      break;
+
+    case shortcuts.nextTask:
+      navigateTask('next');
+      break;
+
+    case shortcuts.prevTask:
+      navigateTask('prev');
+      break;
+
+    case shortcuts.deleteTask:
+      deleteSelectedTask();
+      break;
+
+    case shortcuts.openHelp:
+      e.preventDefault();
+      toggleShortcutHelp();
+      break;
+
+    case shortcuts.confirm:
+      confirmModalAction();
+      break;
+
+    case shortcuts.cancel:
+      cancelModalAction();
+      break;
+
+    default:
+      break;
+  }
+});
+function getKeyCombo(e) {
+  let combo = '';
+  if (e.ctrlKey) combo += 'Ctrl+';
+  if (e.shiftKey) combo += 'Shift+';
+  if (e.altKey) combo += 'Alt+';
+  combo += e.key;
+  return combo;
+}
+
+const taskInput = document.getElementById('task-input');
+const addTaskBtn = document.getElementById('add-task-btn');
+const taskList = document.getElementById('task-list');
+
+const tagInput = document.getElementById('tag-input');
+const tagColor = document.getElementById('tag-color');
+const addTagBtn = document.getElementById('add-tag-btn');
+const tagList = document.getElementById('tag-list');
+
+let tags = JSON.parse(localStorage.getItem('tags')) || [];
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+// Utility: Save to localStorage
+function saveData() {
+  localStorage.setItem('tags', JSON.stringify(tags));
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+// Render Tags
+function renderTags() {
+  tagList.innerHTML = '';
+  tags.forEach(tag => {
+    const li = document.createElement('li');
+    li.className = 'tag-badge';
+    li.textContent = tag.name;
+    li.style.backgroundColor = tag.color;
+    li.dataset.tag = tag.name;
+
+    // Click to filter tasks
+    li.addEventListener('click', () => {
+      li.classList.toggle('filter-active');
+      const activeFilters = [...tagList.querySelectorAll('.filter-active')].map(el => el.dataset.tag);
+      filterTasks(activeFilters);
+    });
+
+    tagList.appendChild(li);
+  });
+}
+
+// Filter tasks by active tags
+function filterTasks(activeTags) {
+  [...taskList.children].forEach(taskEl => {
+    const taskTags = taskEl.dataset.tags ? taskEl.dataset.tags.split(',') : [];
+    if (activeTags.length === 0 || activeTags.some(tag => taskTags.includes(tag))) {
+      taskEl.style.display = '';
+    } else {
+      taskEl.style.display = 'none';
+    }
+  });
+}
+
+// Render Tasks
+function renderTasks() {
+  taskList.innerHTML = '';
+  tasks.forEach(task => addTaskToDOM(task));
+}
+
+// Add task to DOM
+function addTaskToDOM(task) {
+  const li = document.createElement('li');
+  li.className = 'task-item';
+  li.textContent = task.name;
+  li.dataset.tags = task.tags.join(',');
+
+  // Add tag badges
+  task.tags.forEach(tagName => {
+    const tag = tags.find(t => t.name === tagName);
+    if (tag) {
+      const span = document.createElement('span');
+      span.className = 'tag-badge';
+      span.textContent = tag.name;
+      span.style.backgroundColor = tag.color;
+      li.appendChild(span);
+    }
+  });
+
+  taskList.appendChild(li);
+}
+
+// Add new task
+addTaskBtn.addEventListener('click', () => {
+  const name = taskInput.value.trim();
+  if (!name) return;
+
+  const selectedTags = tags.filter(tag => tag.selected).map(tag => tag.name);
+
+  const task = { name, tags: selectedTags };
+  tasks.push(task);
+
+  renderTasks();
+  taskInput.value = '';
+  saveData();
+});
+
+// Add new tag
+addTagBtn.addEventListener('click', () => {
+  const name = tagInput.value.trim();
+  if (!name || tags.some(t => t.name === name)) return;
+
+  const color = tagColor.value;
+  const tag = { name, color, selected: false };
+  tags.push(tag);
+
+  renderTags();
+  tagInput.value = '';
+  saveData();
+});
+
+// Toggle tag selection when creating tasks
+tagList.addEventListener('click', e => {
+  if (e.target.classList.contains('tag-badge')) {
+    const tag = tags.find(t => t.name === e.target.dataset.tag);
+    if (tag) tag.selected = !tag.selected;
+    e.target.classList.toggle('filter-active');
+  }
+});
+
+// Initialize
+renderTags();
+renderTasks();
+
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('modal');
+  const modalTitle = document.getElementById('modal-title');
+  const modalContent = document.getElementById('modal-content');
+  const btnCancel = document.getElementById('modal-cancel');
+  const btnConfirm = document.getElementById('modal-confirm');
+
+  let activeElementBeforeModal = null;
+  let onConfirmCallback = null;
+  let onCancelCallback = null;
+
+  const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+  function openModal({ title = '', content = '', type = 'alert', onConfirm = null, onCancel = null }) {
+    activeElementBeforeModal = document.activeElement;
+    modalTitle.textContent = title;
+    modalContent.innerHTML = content;
+
+    onConfirmCallback = onConfirm;
+    onCancelCallback = onCancel;
+
+    if (type === 'alert') {
+      btnConfirm.style.display = 'inline-block';
+      btnCancel.style.display = 'none';
+    } else if (type === 'confirm' || type === 'form') {
+      btnConfirm.style.display = 'inline-block';
+      btnCancel.style.display = 'inline-block';
+    }
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    const focusables = modal.querySelectorAll(focusableSelectors);
+    if (focusables.length) focusables[0].focus();
+  }
+
+  function closeModal() {
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+    if (activeElementBeforeModal) activeElementBeforeModal.focus();
+    onConfirmCallback = null;
+    onCancelCallback = null;
+  }
+
+  btnConfirm.addEventListener('click', () => {
+    if (onConfirmCallback) onConfirmCallback();
+    closeModal();
+  });
+
+  btnCancel.addEventListener('click', () => {
+    if (onCancelCallback) onCancelCallback();
+    closeModal();
+  });
+
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closeModal();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (!modal.classList.contains('show')) return;
+
+    if (e.key === 'Escape') {
+      if (onCancelCallback) onCancelCallback();
+      closeModal();
+    }
+
+    if (e.key === 'Tab') {
+      const focusables = [...modal.querySelectorAll(focusableSelectors)];
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+
+  // Demo buttons
+  document.getElementById('open-alert').addEventListener('click', () => {
+    openModal({ title: 'Alert', content: 'This is an alert modal!', type: 'alert' });
+  });
+
+  document.getElementById('open-confirm').addEventListener('click', () => {
+    openModal({
+      title: 'Confirm',
+      content: 'Do you want to proceed?',
+      type: 'confirm',
+      onConfirm: () => alert('Confirmed!'),
+      onCancel: () => alert('Cancelled!')
+    });
+  });
+
+  document.getElementById('open-form').addEventListener('click', () => {
+    openModal({
+      title: 'Form',
+      content: `<form>
+                  <label>Name: <input type="text" /></label><br/><br/>
+                  <label>Email: <input type="email" /></label>
+                </form>`,
+      type: 'form',
+      onConfirm: () => alert('Form submitted!'),
+      onCancel: () => alert('Form cancelled!')
+    });
+  });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  // --- Task Management ---
+  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+  const taskInput = document.getElementById('task-input');
+  const addTaskBtn = document.getElementById('add-task-btn');
+  const taskList = document.getElementById('task-list');
+
+  function renderTasks() {
+    taskList.innerHTML = '';
+    tasks.forEach((task) => {
+      const li = document.createElement('li');
+      li.textContent = task;
+      li.className = 'task-item';
+      taskList.appendChild(li);
+    });
+  }
+
+  function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
+
+  addTaskBtn.addEventListener('click', () => {
+    const task = taskInput.value.trim();
+    if (!task) return alert('Enter a task!');
+    tasks.push(task);
+    taskInput.value = '';
+    renderTasks();
+    saveTasks();
+  });
+
+  // Initial render
+  renderTasks();
+
+  // --- Data Persistence ---
+  const exportBtn = document.getElementById('export-btn');
+  const importBtn = document.getElementById('import-btn');
+  const importFile = document.getElementById('import-file');
+  const clearBtn = document.getElementById('clear-btn');
+
+  // Export JSON
+  exportBtn.addEventListener('click', () => {
+    const data = { tasks };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'task-manager-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Import JSON
+  importBtn.addEventListener('click', () => importFile.click());
+
+  importFile.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const importedData = JSON.parse(evt.target.result);
+        if (!importedData.tasks || !Array.isArray(importedData.tasks)) {
+          return alert('Invalid JSON file!');
+        }
+        tasks = importedData.tasks;
+        renderTasks();
+        saveTasks();
+        alert('Data imported successfully!');
+      } catch (err) {
+        alert('Failed to import JSON: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Clear all data
+  clearBtn.addEventListener('click', () => {
+    if (!confirm('Are you sure you want to clear all data?')) return;
+    tasks = [];
+    localStorage.removeItem('tasks');
+    renderTasks();
+    alert('All data cleared.');
+  });
 });
