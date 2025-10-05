@@ -1876,3 +1876,89 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  // --- Task Management ---
+  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+  const taskInput = document.getElementById('task-input');
+  const addTaskBtn = document.getElementById('add-task-btn');
+  const taskList = document.getElementById('task-list');
+
+  function renderTasks() {
+    taskList.innerHTML = '';
+    tasks.forEach((task) => {
+      const li = document.createElement('li');
+      li.textContent = task;
+      li.className = 'task-item';
+      taskList.appendChild(li);
+    });
+  }
+
+  function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
+
+  addTaskBtn.addEventListener('click', () => {
+    const task = taskInput.value.trim();
+    if (!task) return alert('Enter a task!');
+    tasks.push(task);
+    taskInput.value = '';
+    renderTasks();
+    saveTasks();
+  });
+
+  // Initial render
+  renderTasks();
+
+  // --- Data Persistence ---
+  const exportBtn = document.getElementById('export-btn');
+  const importBtn = document.getElementById('import-btn');
+  const importFile = document.getElementById('import-file');
+  const clearBtn = document.getElementById('clear-btn');
+
+  // Export JSON
+  exportBtn.addEventListener('click', () => {
+    const data = { tasks };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'task-manager-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Import JSON
+  importBtn.addEventListener('click', () => importFile.click());
+
+  importFile.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const importedData = JSON.parse(evt.target.result);
+        if (!importedData.tasks || !Array.isArray(importedData.tasks)) {
+          return alert('Invalid JSON file!');
+        }
+        tasks = importedData.tasks;
+        renderTasks();
+        saveTasks();
+        alert('Data imported successfully!');
+      } catch (err) {
+        alert('Failed to import JSON: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Clear all data
+  clearBtn.addEventListener('click', () => {
+    if (!confirm('Are you sure you want to clear all data?')) return;
+    tasks = [];
+    localStorage.removeItem('tasks');
+    renderTasks();
+    alert('All data cleared.');
+  });
+});

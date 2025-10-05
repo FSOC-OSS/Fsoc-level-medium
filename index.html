@@ -488,6 +488,113 @@ document.getElementById('open-form').addEventListener('click', () => {
 });
 </script>
 
+{ font-family: Arial, sans-serif; padding: 20px; }
+button { padding: 8px 12px; margin: 5px; cursor: pointer; }
+#task-list { margin-top: 20px; list-style: none; padding: 0; }
+.task-item { padding: 5px 10px; border: 1px solid #ccc; margin-bottom: 5px; border-radius: 4px; }
+.data-btn { margin-top: 15px; display: block; }
+</style>
+</head>
+<body>
+
+<h1>Task Manager with Data Persistence</h1>
+
+<input type="text" id="task-input" placeholder="Enter new task">
+<button id="add-task-btn" type="button">Add Task</button>
+
+<ul id="task-list"></ul>
+
+<h2>Data Management</h2>
+<button id="export-btn" type="button" class="data-btn">Export Data</button>
+<input type="file" id="import-file" style="display:none">
+<button id="import-btn" type="button" class="data-btn">Import Data</button>
+<button id="clear-btn" type="button" class="data-btn">Clear All Data</button>
+
+<script>
+(() => {
+  // --- Task Management ---
+  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+  const taskInput = document.getElementById('task-input');
+  const addTaskBtn = document.getElementById('add-task-btn');
+  const taskList = document.getElementById('task-list');
+  const exportBtn = document.getElementById('export-btn');
+  const importBtn = document.getElementById('import-btn');
+  const importFile = document.getElementById('import-file');
+  const clearBtn = document.getElementById('clear-btn');
+
+  function renderTasks() {
+    taskList.innerHTML = '';
+    tasks.forEach((task) => {
+      const li = document.createElement('li');
+      li.textContent = task;
+      li.className = 'task-item';
+      taskList.appendChild(li);
+    });
+  }
+
+  function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
+
+  addTaskBtn.addEventListener('click', () => {
+    const task = taskInput.value.trim();
+    if (!task) return alert('Enter a task!');
+    tasks.push(task);
+    taskInput.value = '';
+    renderTasks();
+    saveTasks();
+  });
+
+  // Initial render
+  renderTasks();
+
+  // --- Export JSON ---
+  exportBtn.addEventListener('click', () => {
+    const data = { tasks };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'task-manager-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // --- Import JSON ---
+  importBtn.addEventListener('click', () => importFile.click());
+
+  importFile.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const importedData = JSON.parse(evt.target.result);
+        if (!importedData.tasks || !Array.isArray(importedData.tasks)) {
+          return alert('Invalid JSON file!');
+        }
+        tasks = importedData.tasks;
+        renderTasks();
+        saveTasks();
+        alert('Data imported successfully!');
+      } catch (err) {
+        alert('Failed to import JSON: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // --- Clear All Data ---
+  clearBtn.addEventListener('click', () => {
+    if (!confirm('Are you sure you want to clear all data?')) return;
+    tasks = [];
+    localStorage.removeItem('tasks');
+    renderTasks();
+    alert('All data cleared.');
+  });
+})();
+</script>
         </footer>
         <script src="script.js"></script>
     </body>
