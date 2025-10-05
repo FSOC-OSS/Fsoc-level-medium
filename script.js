@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  //Fix recent changes
   // --- Task Manager Setup ---
   const taskInput = document.getElementById("task-input");
   const dueDateInput = document.getElementById("due-date-input");
@@ -126,6 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function normalizeTask(t) {
     return {
+      id: t.id || (t.created ? String(t.created) : (Date.now() + Math.random()).toString(36)),
       text: t.text || "",
       description: t.description || "",
       tags: Array.isArray(t.tags) ? t.tags : [],
@@ -296,6 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function clearAllTasks() {
+    if (!confirm("Are you sure you want to delete ALL tasks? This cannot be undone.")) return;
     tasks = [];
     tagRegistry = {};
     saveTags();
@@ -455,9 +458,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (q && searchBtn && searchBtn.dataset.active === "true") filteredTasks = matches;
 
     // Sorting
+    // Sorting: user-driven sortType takes precedence; otherwise only sort by column when a key is explicitly set
     if (sortType !== "none") {
       filteredTasks = sortTasksByType(filteredTasks);
-    } else {
+    } else if (sortState && sortState.key) {
       filteredTasks = sortTasksByColumn(filteredTasks);
     }
 
@@ -497,9 +501,12 @@ document.addEventListener("DOMContentLoaded", () => {
     taskList.appendChild(header);
 
     filteredTasks.forEach((task) => {
-      const originalIndex = tasks.findIndex((t) => t === task);
+      const originalIndex = tasks.findIndex((t) => t.id === task.id);
       const li = document.createElement("li");
       li.className = "task-item";
+      // mark as draggable-enabled for pointer-based DnD
+      li.classList.add('draggable-task');
+      li.dataset.id = task.id;
       li.dataset.index = originalIndex;
       li.style.display = "grid";
       li.style.gridTemplateColumns = "2fr 1fr 1fr 1fr 1fr 0.5fr";
@@ -608,6 +615,9 @@ document.addEventListener("DOMContentLoaded", () => {
       li.appendChild(statusCell);
       li.appendChild(deleteBtn);
       taskList.appendChild(li);
+
+      // Pointer-based drag handlers (works with mouse and touch via Pointer Events)
+      li.addEventListener('pointerdown', onTaskPointerDown);
     });
 
     // Add sorting event listeners to column headers
@@ -626,6 +636,155 @@ document.addEventListener("DOMContentLoaded", () => {
         renderTasks();
       });
     });
+  }
+
+  // --- Drag & Drop (pointer-based) ---
+  let dragState = {};
+
+  function onTaskPointerDown(e) {
+    // only start on primary button / primary pointer
+    if (e.button && e.button !== 0) return;
+    const li = e.currentTarget;
+    // avoid starting drag when interacting with interactive controls
+    if (e.target.closest('input,select,button,a,textarea,option')) return;
+
+    e.preventDefault();
+    li.setPointerCapture(e.pointerId);
+
+    dragState = {
+      originLi: li,
+      pointerId: e.pointerId,
+      startY: e.clientY,
+      dragging: false
+    };
+
+    document.addEventListener('pointermove', onTaskPointerMove);
+    document.addEventListener('pointerup', onTaskPointerUp);
+    document.addEventListener('pointercancel', onTaskPointerUp);
+  }
+
+  function onTaskPointerMove(e) {
+    if (!dragState || e.pointerId !== dragState.pointerId) return;
+
+    const dy = e.clientY - dragState.startY;
+    // require small threshold before starting drag to avoid accidental drags
+    if (!dragState.dragging && Math.abs(dy) < 6) return;
+
+    if (!dragState.dragging) {
+      // initialize drag visuals
+      const li = dragState.originLi;
+      const rect = li.getBoundingClientRect();
+
+      // placeholder
+      const placeholder = document.createElement('li');
+      placeholder.className = 'drag-placeholder';
+      placeholder.style.height = rect.height + 'px';
+
+      li.parentNode.insertBefore(placeholder, li.nextSibling);
+
+      // clone shown under pointer
+      const clone = li.cloneNode(true);
+      clone.classList.add('drag-clone');
+      clone.style.position = 'fixed';
+      clone.style.left = rect.left + 'px';
+      clone.style.width = rect.width + 'px';
+      clone.style.top = rect.top + 'px';
+      clone.style.pointerEvents = 'none';
+      clone.style.zIndex = 9999;
+
+      document.body.appendChild(clone);
+
+      li.style.visibility = 'hidden';
+
+      dragState.dragging = true;
+      dragState.clone = clone;
+      dragState.placeholder = placeholder;
+      dragState.offsetY = e.clientY - rect.top;
+    }
+
+    // move clone
+    if (dragState.clone) {
+      dragState.clone.style.top = (e.clientY - dragState.offsetY) + 'px';
+    }
+
+    // determine where to move placeholder
+    const children = Array.from(taskList.querySelectorAll('li.task-item'));
+    let insertBeforeEl = null;
+    for (let i = 0; i < children.length; i++) {
+      const el = children[i];
+      if (el === dragState.originLi) continue;
+      const r = el.getBoundingClientRect();
+      const mid = r.top + r.height / 2;
+      if (e.clientY < mid) {
+        insertBeforeEl = el;
+        break;
+      }
+    }
+
+    if (insertBeforeEl) taskList.insertBefore(dragState.placeholder, insertBeforeEl);
+    else taskList.appendChild(dragState.placeholder);
+  }
+
+  function onTaskPointerUp(e) {
+    if (!dragState || e.pointerId !== dragState.pointerId) return;
+
+    document.removeEventListener('pointermove', onTaskPointerMove);
+    document.removeEventListener('pointerup', onTaskPointerUp);
+    document.removeEventListener('pointercancel', onTaskPointerUp);
+
+    if (dragState.dragging) {
+      const placeholder = dragState.placeholder;
+      const originLi = dragState.originLi;
+
+      // place the original li where the placeholder is
+      placeholder.parentNode.insertBefore(originLi, placeholder);
+      originLi.style.visibility = '';
+
+      // clean up clone and placeholder
+      if (dragState.clone && dragState.clone.parentNode) dragState.clone.parentNode.removeChild(dragState.clone);
+      if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+
+      // rebuild tasks order while preserving tasks not currently visible (filters/search)
+      const orderedLis = Array.from(taskList.querySelectorAll('li.task-item'));
+      const visibleIds = orderedLis.map((it) => String(it.dataset.id));
+      const idToTask = new Map(tasks.map(t => [String(t.id), t]));
+      const visibleIdSet = new Set(visibleIds);
+      const reorderedVisibleTasks = visibleIds.map(id => idToTask.get(id)).filter(Boolean);
+
+      // find first original index among visible items to decide insertion point
+      const firstVisibleId = visibleIds[0];
+      const firstVisibleOldIndex = tasks.findIndex(t => String(t.id) === firstVisibleId);
+
+      const newTasksArr = [];
+      let inserted = false;
+      for (let i = 0; i < tasks.length; i++) {
+        const t = tasks[i];
+        if (visibleIdSet.has(String(t.id))) {
+          // skip visible tasks; they'll be inserted at the insertion point
+          continue;
+        }
+        if (!inserted && i === firstVisibleOldIndex) {
+          newTasksArr.push(...reorderedVisibleTasks);
+          inserted = true;
+        }
+        newTasksArr.push(t);
+      }
+      if (!inserted) newTasksArr.push(...reorderedVisibleTasks);
+
+      tasks = newTasksArr.map(normalizeTask);
+      // Clear sorting so manual order persists
+      sortType = 'none';
+      if (sortState) { sortState.key = null; }
+      saveSortState();
+      saveTasks();
+      renderTasksWithSkeleton();
+      updateTaskProgressBar();
+    } else {
+      // if drag never started, release pointer capture
+      try { dragState.originLi.releasePointerCapture(dragState.pointerId); } catch (e) {}
+    }
+
+    dragState = {};
   }
 
   // Tag helpers
@@ -954,7 +1113,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
         if (response.status === 404) {
-          showWeatherError(`We couldn't find "${city}". Please check the spelling or try another city.`);
+          showWeatherError(`Sorry, we couldn't find "${city}". Please check the spelling or try another city.`);
           return;
         }
         throw new Error(`Server error (${response.status})`);
@@ -1368,86 +1527,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   init();
-});
-
-// --- Command Pattern Core ---
-class Command {
-  execute() {}
-  undo() {}
-}
-
-class CommandManager {
-  constructor(limit = 20) {
-    this.undoStack = [];
-    this.redoStack = [];
-    this.limit = limit;
-  }
-
-  executeCommand(command) {
-    command.execute();
-    this.undoStack.push(command);
-    if (this.undoStack.length > this.limit) this.undoStack.shift();
-    this.redoStack = [];
-    updateButtons();
-  }
-
-  undo() {
-    const command = this.undoStack.pop();
-    if (command) {
-      command.undo();
-      this.redoStack.push(command);
-      updateButtons();
-      showToast("Undo performed");
-    }
-  }
-
-  redo() {
-    const command = this.redoStack.pop();
-    if (command) {
-      command.execute();
-      this.undoStack.push(command);
-      updateButtons();
-      showToast("Redo performed");
-    }
-  }
-
-  clearHistory() {
-    this.undoStack = [];
-    this.redoStack = [];
-    updateButtons();
-    showToast("Undo history cleared");
-  }
-}
-
-// --- Commands for actions ---
-class AddTaskCommand extends Command {
-  constructor(taskText) {
-    super();
-    this.taskText = taskText;
-    this.taskElement = null;
-  }
-
-  execute() {
-    this.taskElement = createTaskElement(this.taskText);
-    taskList.appendChild(this.taskElement);
-  }
-
-  undo() {
-    this.taskElement.remove();
-  }
-}
-
-class DeleteTaskCommand extends Command {
-  constructor(taskElement) {
-    super();
-    this.taskElement = taskElement;
-    this.taskText = taskElement.textContent.replace("Delete", "").trim();
-    this.index = [...taskList.children].indexOf(taskElement);
-  }
-
-  execute() {
-    this.taskElement.remove();
-  }
 
   undo() {
     const tasks = [...taskList.children];

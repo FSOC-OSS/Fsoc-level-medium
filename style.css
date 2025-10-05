@@ -1,4 +1,4 @@
-/* --- Root Variables for Theming --- */
+/* --- Root Variables for Theming ---h */ 
 :root {
     --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #f4f7f9 100%);
     --bg-color: #f4f7f9;
@@ -953,57 +953,32 @@ footer .footer-nav a:hover {
   100% { transform: translateX(100%); }
 }
 
-body {
-  font-family: Arial, sans-serif;
-  padding: 20px;
+/* Drag & Drop styles */
+.drag-clone {
+    box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+    transform: scale(1.02);
+    transition: transform 0.12s ease, opacity 0.12s ease;
+    opacity: 0.98;
+    border-radius: 8px;
+    background: var(--card-bg-color);
 }
 
-button {
-  padding: 10px 15px;
-  margin: 5px;
-  cursor: pointer;
+.drag-placeholder {
+    border: 2px dashed rgba(79,140,255,0.35);
+    background: rgba(79,140,255,0.03);
+    border-radius: 8px;
+    margin: 6px 0;
+    transition: height 0.2s ease, background 0.15s ease;
 }
 
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(2px);
-  z-index: 1000;
+/* Make touch targets larger during drag */
+.draggable-task {
+    touch-action: none; /* allow pointer events for touch dragging */
 }
 
-.modal.show {
-  display: flex;
-}
-
-.modal-content {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  min-width: 300px;
-  max-width: 500px;
-  transform: translateY(-50px);
-  opacity: 0;
-  transition: all 0.3s ease;
-}
-
-.modal.show .modal-content {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-.modal-buttons {
-  margin-top: 20px;
-  text-align: right;
-}
-
-.modal-btn {
-  padding: 8px 12px;
-  margin-left: 10px;
+@media (prefers-reduced-motion: reduce) {
+    .drag-clone, .task-progress-bar-fill, #task-progress-ring {
+        transition: none !important;
+        animation: none !important;
+    }
 }
