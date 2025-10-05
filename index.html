@@ -38,7 +38,7 @@
                         >
                     </li>
                     <li><a href="about.html" class="nav-link">About</a></li>
-                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                    <li><a href="contact.html" class="nav-link">Contact</a></li>
                 </ul>
                 <button id="theme-toggle" class="theme-btn">
                     Toggle Theme
@@ -612,6 +612,16 @@ button { padding: 8px 12px; margin: 5px; cursor: pointer; }
 })();
 </script>
         </footer>
+
         <script src="script.js"></script>
+
+         <script>
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark-theme') {
+            document.documentElement.classList.add('dark-theme');
+            document.body.classList.add('dark-theme');
+        }
+         </script>
+
     </body>
 </html>
