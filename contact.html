@@ -14,13 +14,15 @@
     <header>
         
         <nav>
-           <ul class="nav-links">
-    <li><a href="index.html" class="nav-link">Dashboard</a></li>
-    <li><a href="index.html#about" class="nav-link">About</a></li>
-    <li><a href="contact.html" class="nav-link active">Contact</a></li>
-    <button id="theme-toggle" class="theme-btn">Toggle Theme</button>
-
-</ul>
+            <div class="logo">Fsoc-Medium</div>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Dashboard</a></li>
+                <li><a href="index.html#about" class="nav-link">About</a></li>
+                <li><a href="contact.html" class="nav-link active">Contact</a></li>
+            </ul>
+            <button id="theme-toggle" class="theme-btn">
+                    Toggle Theme
+            </button>
         </nav>
     </header>
 
@@ -71,19 +73,22 @@
 
 
     <script>
-        // Basic form validation
-        const form = document.getElementById('contact-form');
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Thank you! Your message has been submitted.');
-            form.reset();
-        });
+    const themeBtn = document.getElementById('theme-toggle');
 
-        // Optional: theme toggle
-        const themeBtn = document.getElementById('theme-toggle');
-        themeBtn.addEventListener('click', () => {
-            document.body.classList.toggle('dark-theme');
-        });
+    const currentTheme = localStorage.getItem('theme');
+    if (currentTheme) {
+        document.body.classList.add(currentTheme);
+    }
+    
+    themeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-theme');
+        
+        if (document.body.classList.contains('dark-theme')) {
+            localStorage.setItem('theme', 'dark-theme');
+        } else {
+            localStorage.removeItem('theme');
+        }
+    });
     </script>
 </body>
 </html>
