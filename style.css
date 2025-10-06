@@ -58,6 +58,8 @@ body {
     transition: background 0.5s, color 0.3s;
 }
 
+
+
 .container {
     max-width: 1200px;
     margin: 2rem auto;
@@ -899,82 +901,7 @@ footer .footer-nav a:hover {
     text-decoration: underline;
 }
 
-.footer {
-    background-color: var(--card-bg-color);
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px 0 var(--shadow-color);
-    margin-top: 2rem;
-}
 
-/* --- Skeleton Loader Styles --- */
-.skeleton-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.skeleton-item {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 0.5fr;
-  align-items: center;
-  padding: 0.5rem 0.5rem;
-  border-bottom: 1px solid var(--border-color);
-  background: rgba(0,0,0,0.03);
-  position: relative;
-  overflow: hidden;
-}
-.skeleton-bar {
-  height: 18px;
-  border-radius: 8px;
-  background: #e0e7ef;
-  margin-bottom: 6px;
-  position: relative;
-  overflow: hidden;
-}
-.skeleton-bar.short { width: 60%; }
-.skeleton-bar.medium { width: 80%; }
-.skeleton-bar.long { width: 95%; }
-.skeleton-bar.circle {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #e0e7ef;
-  margin: 0 auto;
-}
-.skeleton-shimmer {
-  position: absolute;
-  top: 0; left: 0; height: 100%; width: 100%;
-  background: linear-gradient(90deg, #e0e7ef 0%, #f4f7f9 50%, #e0e7ef 100%);
-  animation: shimmer 1.2s infinite linear;
-  opacity: 0.5;
-}
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* Drag & Drop styles */
-.drag-clone {
-    box-shadow: 0 12px 30px rgba(0,0,0,0.18);
-    transform: scale(1.02);
-    transition: transform 0.12s ease, opacity 0.12s ease;
-    opacity: 0.98;
-    border-radius: 8px;
-    background: var(--card-bg-color);
-}
-
-.drag-placeholder {
-    border: 2px dashed rgba(79,140,255,0.35);
-    background: rgba(79,140,255,0.03);
-    border-radius: 8px;
-    margin: 6px 0;
-    transition: height 0.2s ease, background 0.15s ease;
-}
-
-/* Make touch targets larger during drag */
-.draggable-task {
-    touch-action: none; /* allow pointer events for touch dragging */
-}
 
 
 footer nav .nav-links {
@@ -1162,3 +1089,73 @@ body.modal-open {
     }
 }
 n
+
+
+/* about.html's css as it was inline and */
+
+        .about-section {
+            margin-bottom: 2rem;
+        }
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            text-align: center;
+        }
+        .team-member img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 1rem;
+            border: 3px solid var(--primary-color);
+        }
+        .team-member h3 {
+            margin-bottom: 0.25rem;
+        }
+        .timeline {
+            list-style: none;
+            padding: 0;
+            position: relative;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20px;
+            height: 100%;
+            width: 4px;
+            background: var(--border-color);
+        }
+        .timeline li {
+            margin-bottom: 2rem;
+            padding-left: 40px;
+            position: relative;
+        }
+        .timeline li::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: 3px solid var(--background-color);
+        }
+        .timeline-content h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        footer .footer-nav {
+            margin-bottom: 1rem;
+        }
+        footer .footer-nav a {
+            color: var(--text-color);
+            margin: 0 10px;
+            text-decoration: none;
+        }
+        footer .footer-nav a:hover {
+            text-decoration: underline;
+        }
+
