@@ -381,6 +381,115 @@ closeBtn.addEventListener("click", () => {
       }
     });
   }
+  let selectedTaskIndex = -1;
+
+function focusTaskInput() {
+    document.getElementById('task-input').focus();
+}
+
+function showShortcutModal() {
+    document.getElementById('shortcut-modal').style.display = 'flex';
+}
+
+function hideShortcutModal() {
+    document.getElementById('shortcut-modal').style.display = 'none';
+}
+
+function selectTask(index) {
+    const tasks = document.querySelectorAll('#task-list li');
+    tasks.forEach((task, i) => {
+        task.classList.toggle('selected', i === index);
+    });
+    selectedTaskIndex = index;
+}
+
+function moveSelection(offset) {
+    const tasks = document.querySelectorAll('#task-list li');
+    if (tasks.length === 0) return;
+    let newIndex = selectedTaskIndex + offset;
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= tasks.length) newIndex = tasks.length - 1;
+    selectTask(newIndex);
+    tasks[newIndex].scrollIntoView({ block: 'nearest' });
+}
+
+document.addEventListener('keydown', function(e) {
+    // Ignore shortcuts if modal is open
+    if (document.getElementById('shortcut-modal').style.display === 'flex') {
+        if (e.key === 'Escape') hideShortcutModal();
+        return;
+    }
+
+    // Show shortcut modal
+    if (e.key === '?') {
+        showShortcutModal();
+        e.preventDefault();
+        return;
+    }
+
+    // Focus task input
+    if (e.key === '/') {
+        focusTaskInput();
+        e.preventDefault();
+        return;
+    }
+
+    // Add task
+    if ((e.ctrlKey && e.key === 'n') || 
+        (document.activeElement.id === 'task-input' && e.key === 'Enter')) {
+        document.getElementById('add-task-btn').click();
+        e.preventDefault();
+        return;
+    }
+
+    // Sort tasks
+    if (e.ctrlKey && e.key === 's') {
+        document.getElementById('sort-tasks-btn').click();
+        e.preventDefault();
+        return;
+    }
+
+    // Clear all tasks
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c') {
+        document.getElementById('clear-all-btn').click();
+        e.preventDefault();
+        return;
+    }
+
+    // Navigate tasks
+    if (e.key === 'ArrowDown') {
+        moveSelection(1);
+        e.preventDefault();
+        return;
+    }
+    if (e.key === 'ArrowUp') {
+        moveSelection(-1);
+        e.preventDefault();
+        return;
+    }
+
+    // Complete selected task
+    if (e.ctrlKey && e.key === 'Enter' && selectedTaskIndex !== -1) {
+        const tasks = document.querySelectorAll('#task-list li');
+        const completeBtn = tasks[selectedTaskIndex]?.querySelector('.complete-btn');
+        completeBtn?.click();
+        e.preventDefault();
+        return;
+    }
+
+    // Delete selected task
+    if (e.key === 'Delete' && selectedTaskIndex !== -1) {
+        const tasks = document.querySelectorAll('#task-list li');
+        const deleteBtn = tasks[selectedTaskIndex]?.querySelector('.delete-btn');
+        deleteBtn?.click();
+        e.preventDefault();
+        return;
+    }
+});
+
+document.getElementById('close-shortcut-modal').addEventListener('click', hideShortcutModal);
+
+// Add sele
 
   // --- Sorting ---
   function sortTasksByType(tasksArr) {
@@ -2060,3 +2169,88 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('All data cleared.');
   });
 });
+const modalBackdrop = document.getElementById('modal-backdrop');
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modal-title');
+const modalBody = document.getElementById('modal-body');
+const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+const modalCancelBtn = document.getElementById('modal-cancel-btn');
+const modalCloseBtn = document.getElementById('modal-close-btn');
+
+let lastFocusedElement = null;
+let confirmCallback = null;
+let cancelCallback = null;
+
+function openModal({ title, body, type = 'alert', onConfirm, onCancel }) {
+    lastFocusedElement = document.activeElement;
+    modalTitle.textContent = title || '';
+    modalBody.innerHTML = body || '';
+    modalBackdrop.style.display = 'flex';
+    document.body.classList.add('modal-open');
+    modal.setAttribute('tabindex', '-1');
+    modal.focus();
+
+    // Show/hide buttons based on type
+    modalConfirmBtn.style.display = type === 'confirm' ? '' : 'none';
+    modalCancelBtn.style.display = type === 'confirm' ? '' : 'none';
+    modalCloseBtn.style.display = type === 'alert' || type === 'form' ? '' : 'none';
+
+    confirmCallback = typeof onConfirm === 'function' ? onConfirm : null;
+    cancelCallback = typeof onCancel === 'function' ? onCancel : null;
+}
+
+function closeModal() {
+    modalBackdrop.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    if (lastFocusedElement) lastFocusedElement.focus();
+    confirmCallback = null;
+    cancelCallback = null;
+}
+
+// Button events
+modalConfirmBtn.onclick = () => {
+    if (confirmCallback) confirmCallback();
+    closeModal();
+};
+modalCancelBtn.onclick = () => {
+    if (cancelCallback) cancelCallback();
+    closeModal();
+};
+modalCloseBtn.onclick = closeModal;
+
+// Keyboard accessibility
+modalBackdrop.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
+    // Focus trap
+    const focusable = modalBackdrop.querySelectorAll('button, [tabindex]:not([tabindex="-1"])');
+    if (e.key === 'Tab') {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+            last.focus();
+            e.preventDefault();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            first.focus();
+            e.preventDefault();
+        }
+    }
+});
+openModal({ title: 'Alert', body: 'Something happened!', type: 'alert' });
+openModal({
+  title: 'Confirm',
+  body: 'Are you sure?',
+  type: 'confirm',
+  onConfirm: () => { /* do something */ },
+  onCancel: () => { /* do something else */ }
+});
+openModal({
+  title: 'Edit Task',
+  body: '<form>...</form>',
+  type: 'form'
+});
+
+
+});
+

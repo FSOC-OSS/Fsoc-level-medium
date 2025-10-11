@@ -249,6 +249,93 @@
   </style>
 </head>
 <body>
+
+    <header>
+        <nav>
+            <div class="logo">Fsoc-Medium</div>
+            <ul class="nav-links">
+                <li><a href="#dashboard" class="nav-link active">Dashboard</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+            <button id="theme-toggle" class="theme-btn">Toggle Theme</button>
+        </nav>
+    </header>
+    <main class="container">
+        <section class="card task-manager">
+            <h2>My Tasks</h2>
+            <div class="task-input-container">
+                <input type="text" id="task-input" placeholder="Ready to crush your next goal?">
+                <button id="add-task-btn">Add Task</button>
+            </div>
+            <div class="task-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn"  id="filter-active" data-filter="active">Active</button>
+                <button class="filter-btn" id="filter-completed" data-filter="completed">Completed</button>
+            </div>
+            <ul id="task-list">
+            </ul>
+            <div class="task-actions">
+                <button id="sort-tasks-btn">Sort A-Z</button>
+                <button id="clear-all-btn">Clear All</button>
+            </div>
+            <div class="task-actions">
+    <button id="sort-tasks-btn">Sort A-Z <span class="shortcut-hint">(Ctrl+S)</span></button>
+    <button id="clear-all-btn">Clear All <span class="shortcut-hint">(Ctrl+Shift+C)</span></button>
+</div>
+<button id="add-task-btn">Add Task <span class="shortcut-hint">(Enter/Ctrl+N)</span></button>
+<div id="shortcut-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>Keyboard Shortcuts</h3>
+        <ul>
+            <li><b>Enter</b>: Add Task (when input focused)</li>
+            <li><b>Ctrl+N</b>: Add Task</li>
+            <li><b>/</b>: Focus Task Input</li>
+            <li><b>Arrow Up/Down</b>: Navigate Tasks</li>
+            <li><b>Ctrl+Enter</b>: Complete Selected Task</li>
+            <li><b>Delete</b>: Delete Selected Task</li>
+            <li><b>Ctrl+S</b>: Sort Tasks</li>
+            <li><b>Ctrl+Shift+C</b>: Clear All Tasks</li>
+            <li><b>?</b>: Show Shortcut Help</li>
+            <li><b>Esc</b>: Close Shortcut Help</li>
+        </ul>
+        <button id="close-shortcut-modal">Close</button>
+    </div>
+</div>
+
+<div id="modal-backdrop" class="modal-backdrop" style="display:none;">
+    <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
+        <div class="modal-content">
+            <h3 id="modal-title"></h3>
+            <div id="modal-body"></div>
+            <div class="modal-actions">
+                <button id="modal-confirm-btn" style="display:none;">Confirm</button>
+                <button id="modal-cancel-btn" style="display:none;">Cancel</button>
+                <button id="modal-close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+        </section>
+        <section class="card weather-widget">
+            <h2>Weather Report</h2>
+            <div class="weather-search" style="justify-content: center;">
+                <button id="get-location-btn">Get My Location Weather</button>
+            </div>
+            <div id="weather-info" role="status" aria-live="polite">
+                <p class="loading-text">Search for a city to see the weather...</p>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; <span id="year"></span> Fsoc-Medium Project. All rights reserved.</p>
+        <div class="footer-nav">
+             <a href="index.html">Dashboard</a> | <a href="about.html">About</a> | <a href="#contact">Contact</a>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+</body>
+
   <h1>Undo/Redo Command Pattern</h1>
   <div class="container">
     <input type="text" id="taskInput" placeholder="Enter task" />
@@ -624,4 +711,5 @@ button { padding: 8px 12px; margin: 5px; cursor: pointer; }
          </script>
 
     </body>
+
 </html>
