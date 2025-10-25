@@ -20,29 +20,34 @@
     --priority-medium-bg: #fff9e6;
     --priority-low: #28a745;
     --priority-low-bg: #e6fff2;
+    --input-bg: rgba(255,255,255,0.7);
+    --transition-speed: 0.3s;
 }
 
-body.dark-theme {
-    --bg-gradient: linear-gradient(135deg, #23243a 0%, #1a1a2e 100%);
-    --logo-color: #ffffff;
+:root.dark-theme,
+.dark-theme {
+    --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     --bg-color: #1a1a2e;
-    --card-bg-color: rgba(22,33,62,0.92);
+    --card-bg-color: rgba(22,33,62,0.95);
     --text-color: #e0e0e0;
-    --primary-color: #0f3460;
-    --primary-hover-color: #e94560;
+    --primary-color: #4f8cff;
+    --primary-hover-color: #6ba3ff;
+    --logo-color: #4f8cff;
+    --secondary-color: #a0a0a0;
     --border-color: #2a3b5c;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --navbar-glass: rgba(22,33,62,0.85);
-    --navbar-border: rgba(233,69,96,0.15);
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --completed-color: #666;
+    --navbar-glass: rgba(22,33,62,0.90);
+    --navbar-border: rgba(79,140,255,0.25);
     --accent: #e94560;
     --priority-high: #e94560;
-    --priority-high-bg: rgba(233, 69, 96, 0.15);
+    --priority-high-bg: rgba(233, 69, 96, 0.2);
     --priority-medium: #ffd700;
-    --priority-medium-bg: rgba(255, 215, 0, 0.15);
+    --priority-medium-bg: rgba(255, 215, 0, 0.2);
     --priority-low: #3bd671;
-    --priority-low-bg: rgba(59, 214, 113, 0.15);
+    --priority-low-bg: rgba(59, 214, 113, 0.2);
+    --input-bg: rgba(42,59,92,0.6);
 }
-
 /* --- General Styles --- */
 * {
     margin: 0;
