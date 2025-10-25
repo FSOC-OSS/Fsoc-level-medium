@@ -169,6 +169,28 @@
                     </p>
                 </div>
             </section>
+            <section class="card toast-demo-section">
+                <h2>Toast Notifications Demo</h2>
+                <p style="margin-bottom: 1rem; font-size: 14px; opacity: 0.85;">Test the custom toast notification system with different types and positioning:</p>
+                <div class="toast-demo-buttons">
+                    <button id="toast-success-btn" class="demo-btn success-btn">Success Toast</button>
+                    <button id="toast-error-btn" class="demo-btn error-btn">Error Toast</button>
+                    <button id="toast-warning-btn" class="demo-btn warning-btn">Warning Toast</button>
+                    <button id="toast-info-btn" class="demo-btn info-btn">Info Toast</button>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <label for="toast-position-select" style="font-weight: 500; margin-right: 0.5rem;">Position:</label>
+                    <select id="toast-position-select" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--card-bg-color); color: var(--text-color);">
+                        <option value="top-right">Top Right</option>
+                        <option value="top-left">Top Left</option>
+                        <option value="bottom-right">Bottom Right</option>
+                        <option value="bottom-left">Bottom Left</option>
+                        <option value="top-center">Top Center</option>
+                        <option value="bottom-center">Bottom Center</option>
+                    </select>
+                    <button id="clear-all-toasts-btn" class="demo-btn" style="margin-left: 1rem;">Clear All Toasts</button>
+                </div>
+            </section>
         </main>
         <footer>
             <p>
@@ -699,6 +721,9 @@ button { padding: 8px 12px; margin: 5px; cursor: pointer; }
 })();
 </script>
         </footer>
+
+        <!-- Toast Notification Container -->
+        <div id="toast-container" class="toast-container"></div>
 
         <script src="script.js"></script>
 
