@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <div class="sidebar" id="sidebar">
@@ -28,7 +29,7 @@
                 <li><a href="about.html" class="nav-link">About</a></li>
                 <li><a href="contact.html" class="nav-link">Contact</a></li>
             </ul>
-            <button id="theme-toggle-btn" class="theme-btn">🌙 Dark Mode</button>
+            <button id="theme-toggle" class="theme-btn">🌙 Dark Mode</button>
         </nav>
     </header>
 
@@ -63,6 +64,55 @@
                     <button id="search-btn">Search</button>
                     <button id="clear-search-btn">Clear</button>
                     <span id="search-count"></span>
+                </div>
+            </div>
+
+            <div class="advanced-filter-panel">
+                <div class="filter-header">
+                    <h3>Advanced Filters</h3>
+                    <button id="toggle-filters-btn" class="toggle-filters-btn">Show Filters</button>
+                </div>
+                <div class="filter-content" id="filter-content" style="display: none;">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="filter-status">Status:</label>
+                            <select id="filter-status" class="filter-select">
+                                <option value="">All</option>
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-priority">Priority:</label>
+                            <select id="filter-priority" class="filter-select">
+                                <option value="">All</option>
+                                <option value="1">🔴 High</option>
+                                <option value="2">🟡 Medium</option>
+                                <option value="3">🟢 Low</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-category">Category:</label>
+                            <select id="filter-category" class="filter-select">
+                                <option value="">All Tags</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="filter-date-from">Due Date From:</label>
+                            <input type="date" id="filter-date-from" class="filter-input" />
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-date-to">Due Date To:</label>
+                            <input type="date" id="filter-date-to" class="filter-input" />
+                        </div>
+                        <div class="filter-group filter-actions">
+                            <button id="apply-filters-btn" class="apply-filters-btn">Apply Filters</button>
+                            <button id="clear-all-filters-btn" class="clear-filters-btn">Clear All Filters</button>
+                        </div>
+                    </div>
+                    <div class="active-filters-display" id="active-filters-display"></div>
                 </div>
             </div>
 

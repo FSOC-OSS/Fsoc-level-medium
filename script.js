@@ -218,7 +218,7 @@ class ThemeManager {
   }
 
   setupThemeToggle() {
-    const themeBtn = document.getElementById('theme-toggle-btn');
+    const themeBtn = document.getElementById('theme-toggle');
     if (themeBtn) {
       themeBtn.addEventListener('click', () => this.toggleTheme());
       
@@ -232,7 +232,7 @@ class ThemeManager {
   }
 
   updateButtonText() {
-    const themeBtn = document.getElementById('theme-toggle-btn');
+    const themeBtn = document.getElementById('theme-toggle');
     if (themeBtn) {
       const icon = this.currentTheme === this.themes.DARK ? '☀️' : '🌙';
       const text = this.currentTheme === this.themes.DARK ? 'Light Mode' : 'Dark Mode';
@@ -319,6 +319,16 @@ document.addEventListener("DOMContentLoaded", () => {
     direction: "asc"
   };
 
+  // --- Advanced Filter State ---
+  let advancedFilters = {
+    status: '',
+    priority: '',
+    category: '',
+    dateFrom: '',
+    dateTo: ''
+  };
+
+  // --- Weather API Key ---
   const weatherApiKey = "4b1ee5452a2e3f68205153f28bf93927";
   const DEBOUNCE_DELAY = 500;
   const WEATHER_TIMEOUT_MS = 8000;
@@ -327,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const hamburger = document.getElementById("hamburger");
   const sidebar = document.getElementById("sidebar");
   const closeBtn = document.getElementById("close-btn");
-  const hamburgertabs = document.getElementById("hamburger-tabs")
+  const hamburgerLinks = document.querySelectorAll(".hamburger-link");
 
   if (hamburger) {
     hamburger.addEventListener("click", () => {
@@ -335,9 +345,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (hamburgertabs) {
-    hamburgertabs.addEventListener("click",()=>{
-      sidebar.classList.remove("active");
+  if (hamburgerLinks) {
+    hamburgerLinks.forEach(link => {
+      link.addEventListener("click", () => {
+        sidebar.classList.remove("active");
+      });
     });
   }
 
@@ -438,6 +450,166 @@ document.addEventListener("DOMContentLoaded", () => {
   tasks = tasks.map(normalizeTask);
   saveTasks();
 
+  // --- URL State Management Functions ---
+  function getFiltersFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      status: params.get('status') || '',
+      priority: params.get('priority') || '',
+      category: params.get('category') || '',
+      dateFrom: params.get('dateFrom') || '',
+      dateTo: params.get('dateTo') || ''
+    };
+  }
+
+  function updateURLWithFilters(filters) {
+    const params = new URLSearchParams();
+    
+    if (filters.status) params.set('status', filters.status);
+    if (filters.priority) params.set('priority', filters.priority);
+    if (filters.category) params.set('category', filters.category);
+    if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
+    if (filters.dateTo) params.set('dateTo', filters.dateTo);
+    
+    const newURL = params.toString() 
+      ? `${window.location.pathname}?${params.toString()}` 
+      : window.location.pathname;
+    
+    window.history.pushState({ filters }, '', newURL);
+  }
+
+  function clearURLFilters() {
+    window.history.pushState({}, '', window.location.pathname);
+  }
+
+  function applyFiltersFromURL() {
+    const filters = getFiltersFromURL();
+    advancedFilters = filters;
+    
+    // Update UI
+    const filterStatus = document.getElementById('filter-status');
+    const filterPriority = document.getElementById('filter-priority');
+    const filterCategory = document.getElementById('filter-category');
+    const filterDateFrom = document.getElementById('filter-date-from');
+    const filterDateTo = document.getElementById('filter-date-to');
+    
+    if (filterStatus) filterStatus.value = filters.status;
+    if (filterPriority) filterPriority.value = filters.priority;
+    if (filterCategory) filterCategory.value = filters.category;
+    if (filterDateFrom) filterDateFrom.value = filters.dateFrom;
+    if (filterDateTo) filterDateTo.value = filters.dateTo;
+    
+    updateActiveFiltersDisplay();
+    renderTasksWithSkeleton();
+  }
+
+  function updateActiveFiltersDisplay() {
+    const display = document.getElementById('active-filters-display');
+    if (!display) return;
+    
+    display.innerHTML = '';
+    
+    const filterLabels = {
+      status: 'Status',
+      priority: 'Priority',
+      category: 'Category',
+      dateFrom: 'From',
+      dateTo: 'To'
+    };
+    
+    const priorityLabels = {
+      '1': '🔴 High',
+      '2': '🟡 Medium',
+      '3': '🟢 Low'
+    };
+    
+    const statusLabels = {
+      'active': 'Active',
+      'completed': 'Completed'
+    };
+    
+    Object.entries(advancedFilters).forEach(([key, value]) => {
+      if (value) {
+        const badge = document.createElement('div');
+        badge.className = 'filter-badge';
+        
+        let displayValue = value;
+        if (key === 'priority' && priorityLabels[value]) {
+          displayValue = priorityLabels[value];
+        } else if (key === 'status' && statusLabels[value]) {
+          displayValue = statusLabels[value];
+        }
+        
+        badge.innerHTML = `
+          <span class="badge-label">${filterLabels[key]}:</span>
+          <span class="badge-value">${displayValue}</span>
+          <button class="remove-badge" data-filter="${key}" aria-label="Remove ${filterLabels[key]} filter">×</button>
+        `;
+        
+        const removeBtn = badge.querySelector('.remove-badge');
+        removeBtn.addEventListener('click', () => {
+          advancedFilters[key] = '';
+          
+          // Update form field
+          const fieldId = `filter-${key === 'dateFrom' ? 'date-from' : key === 'dateTo' ? 'date-to' : key}`;
+          const field = document.getElementById(fieldId);
+          if (field) field.value = '';
+          
+          updateURLWithFilters(advancedFilters);
+          updateActiveFiltersDisplay();
+          renderTasksWithSkeleton();
+        });
+        
+        display.appendChild(badge);
+      }
+    });
+  }
+
+  function hasActiveFilters() {
+    return Object.values(advancedFilters).some(val => val !== '');
+  }
+
+  function applyTaskFilters(task) {
+    // Status filter
+    if (advancedFilters.status) {
+      if (advancedFilters.status === 'active' && task.completed) return false;
+      if (advancedFilters.status === 'completed' && !task.completed) return false;
+    }
+    
+    // Priority filter
+    if (advancedFilters.priority) {
+      if (task.priority !== parseInt(advancedFilters.priority)) return false;
+    }
+    
+    // Category/Tag filter
+    if (advancedFilters.category) {
+      if (!task.tags || !task.tags.includes(advancedFilters.category)) return false;
+    }
+    
+    // Date range filter
+    if (advancedFilters.dateFrom || advancedFilters.dateTo) {
+      if (!task.dueDate) return false;
+      
+      const taskDate = new Date(task.dueDate);
+      taskDate.setHours(0, 0, 0, 0);
+      
+      if (advancedFilters.dateFrom) {
+        const fromDate = new Date(advancedFilters.dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        if (taskDate < fromDate) return false;
+      }
+      
+      if (advancedFilters.dateTo) {
+        const toDate = new Date(advancedFilters.dateTo);
+        toDate.setHours(0, 0, 0, 0);
+        if (taskDate > toDate) return false;
+      }
+    }
+    
+    return true;
+  }
+
+  // --- Validation Functions ---
   function validateTaskInput() {
     const value = taskInput.value.trim();
     if (!value) {
@@ -836,13 +1008,30 @@ document.addEventListener("DOMContentLoaded", () => {
       else incompleteTasks.push(task);
     });
 
+    // Filtering - First apply basic filters, then advanced filters
     let filteredTasks = tasks.filter((task) => {
-      if (currentFilter === "active") return !task.completed;
-      if (currentFilter === "completed") return task.completed;
-      if (currentFilter === "priority-1") return task.priority === 1;
-      if (currentFilter === "priority-2") return task.priority === 2;
-      if (currentFilter === "priority-3") return task.priority === 3;
-      if (activeTagFilter) return task.tags && task.tags.includes(activeTagFilter);
+      // Basic filters (original logic)
+      if (currentFilter === "active") {
+        if (task.completed) return false;
+      } else if (currentFilter === "completed") {
+        if (!task.completed) return false;
+      } else if (currentFilter === "priority-1") {
+        if (task.priority !== 1) return false;
+      } else if (currentFilter === "priority-2") {
+        if (task.priority !== 2) return false;
+      } else if (currentFilter === "priority-3") {
+        if (task.priority !== 3) return false;
+      }
+      
+      if (activeTagFilter) {
+        if (!task.tags || !task.tags.includes(activeTagFilter)) return false;
+      }
+      
+      // Apply advanced filters
+      if (hasActiveFilters()) {
+        return applyTaskFilters(task);
+      }
+      
       return true;
     });
 
@@ -1196,6 +1385,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const activeWrap = document.getElementById('active-tag-filter');
     if (activeWrap) activeWrap.textContent = activeTagFilter ? `Filtering: ${activeTagFilter}` : '';
     updateTagFilterOptions();
+    updateCategoryDropdown();
   }
 
   function updateTagFilterOptions() {
@@ -1366,7 +1556,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tagFilterSelect.addEventListener('change', (e) => {
       const val = e.target.value || null;
       activeTagFilter = val;
-      renderTasks();
+      renderTasksWithSkeleton();
     });
   }
 
@@ -1376,7 +1566,7 @@ document.addEventListener("DOMContentLoaded", () => {
       activeTagFilter = null;
       const sel = document.getElementById('tag-filter-select');
       if (sel) sel.value = '';
-      renderTasks();
+      renderTasksWithSkeleton();
     });
   }
 
@@ -1740,6 +1930,108 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // --- Advanced Filter Event Handlers ---
+  const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
+  const filterContent = document.getElementById('filter-content');
+  const filterStatus = document.getElementById('filter-status');
+  const filterPriority = document.getElementById('filter-priority');
+  const filterCategory = document.getElementById('filter-category');
+  const filterDateFrom = document.getElementById('filter-date-from');
+  const filterDateTo = document.getElementById('filter-date-to');
+  const applyFiltersBtn = document.getElementById('apply-filters-btn');
+  const clearAllFiltersBtn = document.getElementById('clear-all-filters-btn');
+
+  // Toggle filter panel visibility
+  if (toggleFiltersBtn && filterContent) {
+    toggleFiltersBtn.addEventListener('click', () => {
+      const isVisible = filterContent.style.display !== 'none';
+      filterContent.style.display = isVisible ? 'none' : 'block';
+      toggleFiltersBtn.textContent = isVisible ? 'Show Filters' : 'Hide Filters';
+    });
+  }
+
+  // Populate category dropdown with tags
+  function updateCategoryDropdown() {
+    if (!filterCategory) return;
+    
+    const currentValue = filterCategory.value;
+    filterCategory.innerHTML = '<option value="">All Tags</option>';
+    
+    const tags = Object.keys(tagRegistry).sort();
+    tags.forEach(tag => {
+      const option = document.createElement('option');
+      option.value = tag;
+      option.textContent = tag;
+      if (tag === currentValue) option.selected = true;
+      filterCategory.appendChild(option);
+    });
+  }
+
+  // Apply filters
+  if (applyFiltersBtn) {
+    applyFiltersBtn.addEventListener('click', () => {
+      advancedFilters = {
+        status: filterStatus ? filterStatus.value : '',
+        priority: filterPriority ? filterPriority.value : '',
+        category: filterCategory ? filterCategory.value : '',
+        dateFrom: filterDateFrom ? filterDateFrom.value : '',
+        dateTo: filterDateTo ? filterDateTo.value : ''
+      };
+      
+      updateURLWithFilters(advancedFilters);
+      updateActiveFiltersDisplay();
+      renderTasksWithSkeleton();
+      
+      toast.success('Filters applied successfully', 'Filters Applied');
+    });
+  }
+
+  // Clear all filters
+  if (clearAllFiltersBtn) {
+    clearAllFiltersBtn.addEventListener('click', () => {
+      advancedFilters = {
+        status: '',
+        priority: '',
+        category: '',
+        dateFrom: '',
+        dateTo: ''
+      };
+      
+      // Reset form fields
+      if (filterStatus) filterStatus.value = '';
+      if (filterPriority) filterPriority.value = '';
+      if (filterCategory) filterCategory.value = '';
+      if (filterDateFrom) filterDateFrom.value = '';
+      if (filterDateTo) filterDateTo.value = '';
+      
+      clearURLFilters();
+      updateActiveFiltersDisplay();
+      renderTasksWithSkeleton();
+      
+      toast.info('All filters cleared', 'Filters Cleared');
+    });
+  }
+
+  // Handle browser back/forward button
+  window.addEventListener('popstate', (event) => {
+    if (event.state && event.state.filters) {
+      advancedFilters = event.state.filters;
+    } else {
+      advancedFilters = getFiltersFromURL();
+    }
+    
+    // Update UI
+    if (filterStatus) filterStatus.value = advancedFilters.status;
+    if (filterPriority) filterPriority.value = advancedFilters.priority;
+    if (filterCategory) filterCategory.value = advancedFilters.category;
+    if (filterDateFrom) filterDateFrom.value = advancedFilters.dateFrom;
+    if (filterDateTo) filterDateTo.value = advancedFilters.dateTo;
+    
+    updateActiveFiltersDisplay();
+    renderTasksWithSkeleton();
+  });
+
+  // --- Skeleton Loader ---
   function showTaskSkeleton(count = 5) {
     taskList.innerHTML = "";
     const skeletonUl = document.createElement("ul");
@@ -1791,6 +2083,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function init() {
+    // Load filters from URL
+    applyFiltersFromURL();
+    
+    // Populate category dropdown
+    updateCategoryDropdown();
+    
     renderTasksWithSkeleton();
     updateTaskProgressBar();
     if (yearSpan) yearSpan.textContent = new Date().getFullYear();
