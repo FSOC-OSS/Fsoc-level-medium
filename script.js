@@ -1,3 +1,153 @@
+// --- Toast Notification System ---
+class ToastNotification {
+  constructor(options = {}) {
+    this.position = options.position || 'top-right';
+    this.defaultDuration = options.defaultDuration || 5000;
+    this.maxToasts = options.maxToasts || 5;
+    this.container = null;
+    this.toasts = [];
+    this.init();
+  }
+
+  init() {
+    this.container = document.getElementById('toast-container');
+    if (!this.container) {
+      this.container = document.createElement('div');
+      this.container.id = 'toast-container';
+      this.container.className = 'toast-container';
+      document.body.appendChild(this.container);
+    }
+    this.container.className = `toast-container ${this.position}`;
+  }
+
+  show(type, title, message, duration) {
+    // Remove oldest toast if limit reached
+    if (this.toasts.length >= this.maxToasts) {
+      this.remove(this.toasts[0].element);
+    }
+
+    const toast = this.createToast(type, title, message, duration);
+    this.container.appendChild(toast.element);
+    this.toasts.push(toast);
+
+    // Auto dismiss
+    if (toast.duration > 0) {
+      toast.timeout = setTimeout(() => {
+        this.remove(toast.element);
+      }, toast.duration);
+    }
+
+    return toast;
+  }
+
+  createToast(type, title, message, duration) {
+    const toastDuration = duration !== undefined ? duration : this.defaultDuration;
+    
+    const toastElement = document.createElement('div');
+    toastElement.className = `toast ${type}`;
+    
+    const icons = {
+      success: '✓',
+      error: '✕',
+      warning: '⚠',
+      info: 'ℹ'
+    };
+
+    const titles = {
+      success: 'Success',
+      error: 'Error',
+      warning: 'Warning',
+      info: 'Information'
+    };
+
+    const icon = icons[type] || 'ℹ';
+    const toastTitle = title || titles[type] || 'Notification';
+
+    toastElement.innerHTML = `
+      <div class="toast-icon">${icon}</div>
+      <div class="toast-content">
+        <div class="toast-title">${toastTitle}</div>
+        ${message ? `<div class="toast-message">${message}</div>` : ''}
+      </div>
+      <button class="toast-close" aria-label="Close notification">×</button>
+      ${toastDuration > 0 ? `<div class="toast-progress" style="animation-duration: ${toastDuration}ms;"></div>` : ''}
+    `;
+
+    const closeBtn = toastElement.querySelector('.toast-close');
+    closeBtn.addEventListener('click', () => {
+      this.remove(toastElement);
+    });
+
+    return {
+      element: toastElement,
+      duration: toastDuration,
+      timeout: null
+    };
+  }
+
+  remove(toastElement) {
+    const index = this.toasts.findIndex(t => t.element === toastElement);
+    if (index === -1) return;
+
+    const toast = this.toasts[index];
+    
+    // Clear timeout if exists
+    if (toast.timeout) {
+      clearTimeout(toast.timeout);
+    }
+
+    // Add removing animation
+    toastElement.classList.add('removing');
+    
+    setTimeout(() => {
+      if (toastElement.parentNode) {
+        toastElement.parentNode.removeChild(toastElement);
+      }
+      this.toasts.splice(index, 1);
+    }, 300); // Match animation duration
+  }
+
+  success(message, title, duration) {
+    return this.show('success', title, message, duration);
+  }
+
+  error(message, title, duration) {
+    return this.show('error', title, message, duration);
+  }
+
+  warning(message, title, duration) {
+    return this.show('warning', title, message, duration);
+  }
+
+  info(message, title, duration) {
+    return this.show('info', title, message, duration);
+  }
+
+  setPosition(position) {
+    this.position = position;
+    this.container.className = `toast-container ${position}`;
+  }
+
+  clearAll() {
+    this.toasts.forEach(toast => {
+      if (toast.timeout) {
+        clearTimeout(toast.timeout);
+      }
+      if (toast.element.parentNode) {
+        toast.element.parentNode.removeChild(toast.element);
+      }
+    });
+    this.toasts = [];
+  }
+}
+
+// Initialize global toast instance
+const toast = new ToastNotification({
+  position: 'top-right',
+  defaultDuration: 5000,
+  maxToasts: 5
+});
+
 document.addEventListener("DOMContentLoaded", () => {
   //Fix recent changes
   // --- Task Manager Setup ---
@@ -1094,7 +1244,11 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       saveBtn.title = 'Rename tag';
       saveBtn.addEventListener('click', () => {
         const newName = label.value.trim();
-        if (!newName) { alert('Tag name cannot be empty'); label.value = tag; return; }
+        if (!newName) { 
+          toast.warning('Tag name cannot be empty', 'Invalid Tag Name'); 
+          label.value = tag; 
+          return; 
+        }
         if (newName.toLowerCase() === tag) return;
         renameTag(tag, newName);
       });
@@ -1195,12 +1349,12 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
           renderPopularTags();
           renderTasks();
           updateTaskProgressBar();
-          alert("Tasks imported successfully!");
+          toast.success('Your tasks have been imported successfully!', 'Import Complete');
         } else {
-          alert("Invalid file format.");
+          toast.error('The file format is invalid. Please upload a valid JSON file.', 'Invalid File Format');
         }
       } catch (err) {
-        alert("Error importing tasks: " + err.message);
+        toast.error(`Failed to import tasks: ${err.message}`, 'Import Error');
       }
     };
     reader.readAsText(file);
@@ -1655,324 +1809,7 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
   }
 
   init();
-
-  undo() {
-    const tasks = [...taskList.children];
-    if (this.index >= tasks.length) {
-      taskList.appendChild(this.taskElement);
-    } else {
-      taskList.insertBefore(this.taskElement, tasks[this.index]);
-    }
-  }
-}
-
-// --- Setup ---
-const taskInput = document.getElementById("taskInput");
-const addTaskBtn = document.getElementById("addTaskBtn");
-const taskList = document.getElementById("taskList");
-const undoBtn = document.getElementById("undoBtn");
-const redoBtn = document.getElementById("redoBtn");
-const clearHistoryBtn = document.getElementById("clearHistoryBtn");
-const toast = document.getElementById("toast");
-
-const manager = new CommandManager();
-
-// --- Event Listeners ---
-addTaskBtn.addEventListener("click", () => {
-  const text = taskInput.value.trim();
-  if (text) {
-    manager.executeCommand(new AddTaskCommand(text));
-    taskInput.value = "";
-    showToast("Task added");
-  }
 });
-
-undoBtn.addEventListener("click", () => manager.undo());
-redoBtn.addEventListener("click", () => manager.redo());
-clearHistoryBtn.addEventListener("click", () => manager.clearHistory());
-
-// --- Keyboard Shortcuts ---
-document.addEventListener("keydown", (e) => {
-  if (e.ctrlKey && e.key === "z") {
-    e.preventDefault();
-    manager.undo();
-  } else if ((e.ctrlKey && e.key === "y") || (e.ctrlKey && e.shiftKey && e.key === "Z")) {
-    e.preventDefault();
-    manager.redo();
-  }
-});
-
-// --- Helper Functions ---
-function createTaskElement(text) {
-  const li = document.createElement("li");
-  li.textContent = text;
-
-  const delBtn = document.createElement("button");
-  delBtn.textContent = "Delete";
-  delBtn.addEventListener("click", () => {
-    manager.executeCommand(new DeleteTaskCommand(li));
-    showToast("Task deleted");
-  });
-
-  li.appendChild(delBtn);
-  return li;
-}
-
-function showToast(message) {
-  toast.textContent = message;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2000);
-}
-
-function updateButtons() {
-  undoBtn.disabled = manager.undoStack.length === 0;
-  redoBtn.disabled = manager.redoStack.length === 0;
-}
-
-const shortcuts = {
-  addTask: 'Ctrl+N',
-  search: '/',
-  nextTask: 'ArrowDown',
-  prevTask: 'ArrowUp',
-  deleteTask: 'Delete',
-  openHelp: '?',
-  confirm: 'Enter',
-  cancel: 'Escape'
-};
-document.addEventListener('keydown', (e) => {
-  const key = getKeyCombo(e);
-
-  switch (key) {
-    case shortcuts.addTask:
-      e.preventDefault();
-      openAddTaskModal();
-      break;
-
-    case shortcuts.search:
-      e.preventDefault();
-      focusSearchInput();
-      break;
-
-    case shortcuts.nextTask:
-      navigateTask('next');
-      break;
-
-    case shortcuts.prevTask:
-      navigateTask('prev');
-      break;
-
-    case shortcuts.deleteTask:
-      deleteSelectedTask();
-      break;
-
-    case shortcuts.openHelp:
-      e.preventDefault();
-      toggleShortcutHelp();
-      break;
-
-    case shortcuts.confirm:
-      confirmModalAction();
-      break;
-
-    case shortcuts.cancel:
-      cancelModalAction();
-      break;
-
-    default:
-      break;
-  }
-});
-function getKeyCombo(e) {
-  let combo = '';
-  if (e.ctrlKey) combo += 'Ctrl+';
-  if (e.shiftKey) combo += 'Shift+';
-  if (e.altKey) combo += 'Alt+';
-  combo += e.key;
-  return combo;
-}
-
-const shortcuts = {
-  addTask: 'Ctrl+N',
-  search: '/',
-  nextTask: 'ArrowDown',
-  prevTask: 'ArrowUp',
-  deleteTask: 'Delete',
-  openHelp: '?',
-  confirm: 'Enter',
-  cancel: 'Escape'
-};
-document.addEventListener('keydown', (e) => {
-  const key = getKeyCombo(e);
-
-  switch (key) {
-    case shortcuts.addTask:
-      e.preventDefault();
-      openAddTaskModal();
-      break;
-
-    case shortcuts.search:
-      e.preventDefault();
-      focusSearchInput();
-      break;
-
-    case shortcuts.nextTask:
-      navigateTask('next');
-      break;
-
-    case shortcuts.prevTask:
-      navigateTask('prev');
-      break;
-
-    case shortcuts.deleteTask:
-      deleteSelectedTask();
-      break;
-
-    case shortcuts.openHelp:
-      e.preventDefault();
-      toggleShortcutHelp();
-      break;
-
-    case shortcuts.confirm:
-      confirmModalAction();
-      break;
-
-    case shortcuts.cancel:
-      cancelModalAction();
-      break;
-
-    default:
-      break;
-  }
-});
-function getKeyCombo(e) {
-  let combo = '';
-  if (e.ctrlKey) combo += 'Ctrl+';
-  if (e.shiftKey) combo += 'Shift+';
-  if (e.altKey) combo += 'Alt+';
-  combo += e.key;
-  return combo;
-}
-
-const taskInput = document.getElementById('task-input');
-const addTaskBtn = document.getElementById('add-task-btn');
-const taskList = document.getElementById('task-list');
-
-const tagInput = document.getElementById('tag-input');
-const tagColor = document.getElementById('tag-color');
-const addTagBtn = document.getElementById('add-tag-btn');
-const tagList = document.getElementById('tag-list');
-
-let tags = JSON.parse(localStorage.getItem('tags')) || [];
-let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-
-// Utility: Save to localStorage
-function saveData() {
-  localStorage.setItem('tags', JSON.stringify(tags));
-  localStorage.setItem('tasks', JSON.stringify(tasks));
-}
-
-// Render Tags
-function renderTags() {
-  tagList.innerHTML = '';
-  tags.forEach(tag => {
-    const li = document.createElement('li');
-    li.className = 'tag-badge';
-    li.textContent = tag.name;
-    li.style.backgroundColor = tag.color;
-    li.dataset.tag = tag.name;
-
-    // Click to filter tasks
-    li.addEventListener('click', () => {
-      li.classList.toggle('filter-active');
-      const activeFilters = [...tagList.querySelectorAll('.filter-active')].map(el => el.dataset.tag);
-      filterTasks(activeFilters);
-    });
-
-    tagList.appendChild(li);
-  });
-}
-
-// Filter tasks by active tags
-function filterTasks(activeTags) {
-  [...taskList.children].forEach(taskEl => {
-    const taskTags = taskEl.dataset.tags ? taskEl.dataset.tags.split(',') : [];
-    if (activeTags.length === 0 || activeTags.some(tag => taskTags.includes(tag))) {
-      taskEl.style.display = '';
-    } else {
-      taskEl.style.display = 'none';
-    }
-  });
-}
-
-// Render Tasks
-function renderTasks() {
-  taskList.innerHTML = '';
-  tasks.forEach(task => addTaskToDOM(task));
-}
-
-// Add task to DOM
-function addTaskToDOM(task) {
-  const li = document.createElement('li');
-  li.className = 'task-item';
-  li.textContent = task.name;
-  li.dataset.tags = task.tags.join(',');
-
-  // Add tag badges
-  task.tags.forEach(tagName => {
-    const tag = tags.find(t => t.name === tagName);
-    if (tag) {
-      const span = document.createElement('span');
-      span.className = 'tag-badge';
-      span.textContent = tag.name;
-      span.style.backgroundColor = tag.color;
-      li.appendChild(span);
-    }
-  });
-
-  taskList.appendChild(li);
-}
-
-// Add new task
-addTaskBtn.addEventListener('click', () => {
-  const name = taskInput.value.trim();
-  if (!name) return;
-
-  const selectedTags = tags.filter(tag => tag.selected).map(tag => tag.name);
-
-  const task = { name, tags: selectedTags };
-  tasks.push(task);
-
-  renderTasks();
-  taskInput.value = '';
-  saveData();
-});
-
-// Add new tag
-addTagBtn.addEventListener('click', () => {
-  const name = tagInput.value.trim();
-  if (!name || tags.some(t => t.name === name)) return;
-
-  const color = tagColor.value;
-  const tag = { name, color, selected: false };
-  tags.push(tag);
-
-  renderTags();
-  tagInput.value = '';
-  saveData();
-});
-
-// Toggle tag selection when creating tasks
-tagList.addEventListener('click', e => {
-  if (e.target.classList.contains('tag-badge')) {
-    const tag = tags.find(t => t.name === e.target.dataset.tag);
-    if (tag) tag.selected = !tag.selected;
-    e.target.classList.toggle('filter-active');
-  }
-});
-
-// Initialize
-renderTags();
-renderTasks();
 
 document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('modal');
@@ -2065,8 +1902,8 @@ document.addEventListener('DOMContentLoaded', () => {
       title: 'Confirm',
       content: 'Do you want to proceed?',
       type: 'confirm',
-      onConfirm: () => alert('Confirmed!'),
-      onCancel: () => alert('Cancelled!')
+      onConfirm: () => toast.success('Action confirmed successfully!', 'Confirmed'),
+      onCancel: () => toast.info('Action was cancelled', 'Cancelled')
     });
   });
 
@@ -2078,10 +1915,55 @@ document.addEventListener('DOMContentLoaded', () => {
                   <label>Email: <input type="email" /></label>
                 </form>`,
       type: 'form',
-      onConfirm: () => alert('Form submitted!'),
-      onCancel: () => alert('Form cancelled!')
+      onConfirm: () => toast.success('Form submitted successfully!', 'Form Submitted'),
+      onCancel: () => toast.info('Form submission cancelled', 'Cancelled')
     });
   });
+
+  // --- Toast Notification Demo Buttons ---
+  const toastSuccessBtn = document.getElementById('toast-success-btn');
+  const toastErrorBtn = document.getElementById('toast-error-btn');
+  const toastWarningBtn = document.getElementById('toast-warning-btn');
+  const toastInfoBtn = document.getElementById('toast-info-btn');
+  const toastPositionSelect = document.getElementById('toast-position-select');
+  const clearAllToastsBtn = document.getElementById('clear-all-toasts-btn');
+
+  if (toastSuccessBtn) {
+    toastSuccessBtn.addEventListener('click', () => {
+      toast.success('Your operation completed successfully!', 'Success', 5000);
+    });
+  }
+
+  if (toastErrorBtn) {
+    toastErrorBtn.addEventListener('click', () => {
+      toast.error('An error occurred while processing your request.', 'Error', 5000);
+    });
+  }
+
+  if (toastWarningBtn) {
+    toastWarningBtn.addEventListener('click', () => {
+      toast.warning('Please review your input before proceeding.', 'Warning', 5000);
+    });
+  }
+
+  if (toastInfoBtn) {
+    toastInfoBtn.addEventListener('click', () => {
+      toast.info('This is an informational message for you.', 'Information', 5000);
+    });
+  }
+
+  if (toastPositionSelect) {
+    toastPositionSelect.addEventListener('change', (e) => {
+      toast.setPosition(e.target.value);
+      toast.info(`Toast position changed to: ${e.target.value.replace('-', ' ')}`, 'Position Updated', 3000);
+    });
+  }
+
+  if (clearAllToastsBtn) {
+    clearAllToastsBtn.addEventListener('click', () => {
+      toast.clearAll();
+    });
+  }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -2108,11 +1990,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   addTaskBtn.addEventListener('click', () => {
     const task = taskInput.value.trim();
-    if (!task) return alert('Enter a task!');
+    if (!task) {
+      toast.warning('Please enter a task before adding', 'Task Required');
+      return;
+    }
     tasks.push(task);
     taskInput.value = '';
     renderTasks();
     saveTasks();
+    toast.success('Task added successfully!', 'Task Added');
   });
 
   // Initial render
@@ -2134,6 +2020,7 @@ document.addEventListener('DOMContentLoaded', () => {
     a.download = 'task-manager-backup.json';
     a.click();
     URL.revokeObjectURL(url);
+    toast.success('Your data has been exported successfully!', 'Export Complete');
   });
 
   // Import JSON
@@ -2147,14 +2034,15 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const importedData = JSON.parse(evt.target.result);
         if (!importedData.tasks || !Array.isArray(importedData.tasks)) {
-          return alert('Invalid JSON file!');
+          toast.error('The file format is invalid. Please upload a valid JSON file.', 'Invalid JSON File');
+          return;
         }
         tasks = importedData.tasks;
         renderTasks();
         saveTasks();
-        alert('Data imported successfully!');
+        toast.success('Your data has been imported successfully!', 'Import Complete');
       } catch (err) {
-        alert('Failed to import JSON: ' + err.message);
+        toast.error(`Failed to import JSON: ${err.message}`, 'Import Error');
       }
     };
     reader.readAsText(file);
@@ -2166,7 +2054,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tasks = [];
     localStorage.removeItem('tasks');
     renderTasks();
-    alert('All data cleared.');
+    toast.info('All data has been cleared', 'Data Cleared');
   });
 });
 const modalBackdrop = document.getElementById('modal-backdrop');
@@ -2237,20 +2125,3 @@ modalBackdrop.addEventListener('keydown', (e) => {
         }
     }
 });
-openModal({ title: 'Alert', body: 'Something happened!', type: 'alert' });
-openModal({
-  title: 'Confirm',
-  body: 'Are you sure?',
-  type: 'confirm',
-  onConfirm: () => { /* do something */ },
-  onCancel: () => { /* do something else */ }
-});
-openModal({
-  title: 'Edit Task',
-  body: '<form>...</form>',
-  type: 'form'
-});
-
-
-});
-

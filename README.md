@@ -4,6 +4,25 @@ We welcome all types of contributions! Whether you're fixing bugs, adding featur
 
 ---
 
+## ✨ Recent Updates
+
+### 🍞 Custom Toast Notification System
+The application now features a modern toast notification system that replaces browser `alert()` dialogs:
+
+- **Multiple notification types**: Success, Error, Warning, Info
+- **Auto-dismiss** with visual progress bar
+- **Manual close** button on each toast
+- **Stack multiple toasts** simultaneously (up to 5)
+- **6 position options**: top-right, top-left, bottom-right, bottom-left, top-center, bottom-center
+- **Smooth animations**: Slide-in/out effects
+- **Fully responsive** and theme-aware
+- **Zero dependencies**: Pure vanilla JavaScript
+
+📖 See [TOAST_NOTIFICATIONS.md](./TOAST_NOTIFICATIONS.md) for complete documentation.  
+🧪 Try the demo: Open `toast-demo.html` in your browser or check the demo section on the main dashboard.
+
+---
+
 ## 📌 Step-by-Step Guide to Making a Pull Request
 
 ### 1. **Fork the Repository** 🍴
