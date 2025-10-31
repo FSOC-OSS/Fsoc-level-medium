@@ -9,6 +9,11 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous" ></script>
+        <meta name="description" content="Smart Task Manager & Weather Dashboard with accessibility features" />
+        
+        <!-- Add this line for high contrast stylesheet -->
+        <link rel="stylesheet" href="high-contrast.css" disabled id="high-contrast-stylesheet" />
+
     </head>
     <body>
     
@@ -21,6 +26,21 @@
   </ul>
 </div>
         <header>
+            <!-- Accessibility Toolbar -->
+<div id="accessibility-controls" aria-label="Accessibility Settings">
+  <button id="increase-font">A+</button>
+  <button id="decrease-font">A-</button>
+  <button id="toggle-contrast">High Contrast</button>
+  <button id="toggle-animations">Toggle Animations</button>
+
+  <label for="text-spacing">Text Spacing:</label>
+  <select id="text-spacing">
+    <option value="normal">Normal</option>
+    <option value="wide">Wide</option>
+    <option value="wider">Wider</option>
+  </select>
+</div>
+
             <nav>
                 <div class="logo">Fsoc-Medium</div>
                 <div class="hamburger" id="hamburger">☰</div>
@@ -38,6 +58,8 @@
                 </button>
             </nav>
         </header>
+
+        
         <main class="container">
             <section class="card task-manager">
                 <h2>My Tasks</h2>
@@ -46,20 +68,23 @@
                         type="text"
                         id="task-input"
                         placeholder="Ready to crush your next goal?"
+                        aria-label="Task description"
+                        role="textbox"
                     />
-                    <input type="text" id="task-tags" placeholder="Add tags (space separated)" />
+                    <input type="text" id="task-tags" placeholder="Add tags (space separated)" aria-label="Task tags" />
                     <input
                         type="date"
                         id="due-date-input"
                         placeholder="Due date"
+                        aria-label="Task Due Date"
                         style="max-width: 160px;"
                     />
-                    <select id="priority-select">
+                    <select id="priority-select" aria-label="Task Priority">
                         <option value="3">🟢 Low</option>
                         <option value="2" selected>🟡 Medium</option>
                         <option value="1">🔴 High</option>
                     </select>
-                    <button id="add-task-btn">Add Task</button>
+                    <button id="add-task-btn" aria-label="Add new task">Add Task</button>
                 </div>
                 <div class="tags-row">
                     <div id="tag-suggestions" class="tag-suggestions" aria-live="polite"></div>
@@ -180,7 +205,7 @@
                     <button class="view-mode-btn" id="grid-mode-btn">Grid</button>
                     <button class="view-mode-btn" id="compact-mode-btn">Compact</button>
                 </div>
-                <ul id="task-list"></ul>
+                <ul id="task-list" role="list" aria-label="Task List" tabindex="0"></ul>
                 <div class="task-actions">
                     <button id="sort-priority-btn">Sort by Priority</button>
                     <button id="sort-date-btn">Sort by Date</button>
@@ -275,5 +300,86 @@
  <!-- Scripts consolidated -->
         <script src="script.js"></script>
         
+        <script>
+// =========================
+// ACCESSIBILITY FEATURES
+// =========================
+
+// --- Font Size Controls ---
+const increaseFontBtn = document.getElementById('increase-font');
+const decreaseFontBtn = document.getElementById('decrease-font');
+let fontSize = 100;
+
+increaseFontBtn.addEventListener('click', () => {
+  fontSize += 10;
+  document.body.style.fontSize = fontSize + '%';
+});
+
+decreaseFontBtn.addEventListener('click', () => {
+  if (fontSize > 60) {
+    fontSize -= 10;
+    document.body.style.fontSize = fontSize + '%';
+  }
+});
+
+// --- High Contrast Mode ---
+const toggleContrastBtn = document.getElementById('toggle-contrast');
+const highContrastStylesheet = document.getElementById('high-contrast-stylesheet');
+
+toggleContrastBtn.addEventListener("click", () => {
+  if (contrastStylesheet.disabled) {
+    contrastStylesheet.disabled = false; // enable contrast mode
+    document.body.classList.add("high-contrast-active");
+  } else {
+    contrastStylesheet.disabled = true; // disable contrast mode
+    document.body.classList.remove("high-contrast-active");
+  }
+});
+
+
+if (localStorage.getItem('highContrast') === 'true') {
+  highContrastStylesheet.disabled = false;
+}
+
+// --- Animation Toggle ---
+const toggleAnimationsBtn = document.getElementById('toggle-animations');
+toggleAnimationsBtn.addEventListener('click', () => {
+  const animationsDisabled = document.body.classList.toggle('reduce-motion');
+  localStorage.setItem('reduceMotion', animationsDisabled);
+});
+
+if (localStorage.getItem('reduceMotion') === 'true') {
+  document.body.classList.add('reduce-motion');
+}
+
+// --- Text Spacing Control ---
+const textSpacingSelect = document.getElementById('text-spacing');
+textSpacingSelect.addEventListener('change', (e) => {
+  const spacing = e.target.value;
+  if (spacing === 'normal') {
+    document.body.style.letterSpacing = 'normal';
+    document.body.style.lineHeight = 'normal';
+  } else if (spacing === 'wide') {
+    document.body.style.letterSpacing = '1px';
+    document.body.style.lineHeight = '1.6';
+  } else if (spacing === 'wider') {
+    document.body.style.letterSpacing = '2px';
+    document.body.style.lineHeight = '1.8';
+  }
+});
+
+// --- Keyboard Navigation Focus Indicator ---
+document.body.addEventListener('keyup', (e) => {
+  if (e.key === 'Tab') {
+    document.body.classList.add('user-is-tabbing');
+  }
+});
+
+document.body.addEventListener('mousedown', () => {
+  document.body.classList.remove('user-is-tabbing');
+});
+</script>
+</body>
+
     </body>
 </html>
