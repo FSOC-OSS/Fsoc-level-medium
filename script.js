@@ -1959,17 +1959,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-// --- Toast Notification System ---
-class ToastNotification {
-    // ...existing toast notification code...
-}
 
-// Initialize global toast instance
-const toast = new ToastNotification({
-    position: 'top-right',
-    defaultDuration: 5000,
-    maxToasts: 5
-});
+
+
 
 // --- Document Ready Handler ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -1999,97 +1991,149 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Modal System ---
     // ...existing modal code...
 
-    // --- Initialization ---
-    function init() {
-        applyFiltersFromURL();
-        updateCategoryDropdown();
-        renderTasksWithSkeleton();
-        updateTaskProgressBar();
-        if (yearSpan) yearSpan.textContent = new Date().getFullYear();
-        getLocationWeather();
+   // ...existing code...
+
+/* ---------- CLEANED FINAL INITIALIZATION (replace duplicate bottom blocks) ---------- */
+
+(function () {
+  // Defensive helper
+  const $ = id => document.getElementById(id);
+
+  // Ensure we don't redeclare ToastNotification: assume original class exists earlier in file.
+  // Accessibility Controls (safe checks)
+  function initAccessibilityControls() {
+    const increaseFontBtn = $('increase-font');
+    const decreaseFontBtn = $('decrease-font');
+    const contrastBtn = $('toggle-contrast');
+    const animationsBtn = $('toggle-animations');
+    const textSpacing = $('text-spacing');
+
+    if (increaseFontBtn) {
+      increaseFontBtn.addEventListener('click', () => {
+        document.body.style.fontSize =
+          (parseInt(getComputedStyle(document.body).fontSize, 10) || 16) + 2 + 'px';
+      });
     }
-    
 
-    // Start the application
-    init();
-});
-  function init() {
-    // Load filters from URL
-    applyFiltersFromURL();
-    
-    // Populate category dropdown
-    updateCategoryDropdown();
-    
-    renderTasksWithSkeleton();
-    updateTaskProgressBar();
-    if (yearSpan) yearSpan.textContent = new Date().getFullYear();
-    getLocationWeather();
+    if (decreaseFontBtn) {
+      decreaseFontBtn.addEventListener('click', () => {
+        document.body.style.fontSize =
+          Math.max(10, (parseInt(getComputedStyle(document.body).fontSize, 10) || 16) - 2) + 'px';
+      });
+    }
+
+    if (contrastBtn) {
+      contrastBtn.addEventListener('click', () => {
+        document.body.classList.toggle('high-contrast-mode');
+        const hcs = document.getElementById('high-contrast-stylesheet');
+        if (hcs) hcs.disabled = !hcs.disabled;
+      });
+    }
+
+    if (animationsBtn) {
+      animationsBtn.addEventListener('click', () => {
+        document.body.classList.toggle('reduced-motion');
+      });
+    }
+
+    if (textSpacing) {
+      textSpacing.addEventListener('change', (e) => {
+        document.body.classList.remove('wider-spacing');
+        if (e.target.value !== 'normal') document.body.classList.add('wider-spacing');
+      });
+    }
   }
 
-  init();
+  // Keyboard navigation for task list (safe)
+  function initKeyboardNavigation() {
+    const taskList = $('task-list');
+    if (!taskList) return;
+    let currentFocus = -1;
+    taskList.setAttribute('tabindex', taskList.getAttribute('tabindex') || '0');
 
-  const toastSuccessBtn = document.getElementById('toast-success-btn');
-  const toastErrorBtn = document.getElementById('toast-error-btn');
-  const toastWarningBtn = document.getElementById('toast-warning-btn');
-  const toastInfoBtn = document.getElementById('toast-info-btn');
-  const toastPositionSelect = document.getElementById('toast-position-select');
-  const clearAllToastsBtn = document.getElementById('clear-all-toasts-btn');
+    taskList.addEventListener('keydown', (e) => {
+      const items = Array.from(taskList.querySelectorAll('li.task-item, li.task-empty-state'));
+      if (!items.length) return;
 
-  if (toastSuccessBtn) {
-    toastSuccessBtn.addEventListener('click', () => {
-      toast.success('Your operation completed successfully!', 'Success', 5000);
+      if (e.key === 'ArrowDown') {
+        currentFocus = Math.min(currentFocus + 1, items.length - 1);
+        items[currentFocus].focus();
+        e.preventDefault();
+      } else if (e.key === 'ArrowUp') {
+        currentFocus = Math.max(currentFocus - 1, 0);
+        items[currentFocus].focus();
+        e.preventDefault();
+      }
     });
+
+    // Make items focusable when rendered
+    const observer = new MutationObserver(() => {
+      taskList.querySelectorAll('li.task-item, li.task-empty-state').forEach(li => {
+        if (!li.hasAttribute('tabindex')) li.setAttribute('tabindex', '0');
+      });
+    });
+    observer.observe(taskList, { childList: true, subtree: false });
   }
 
-  if (toastErrorBtn) {
-    toastErrorBtn.addEventListener('click', () => {
-      toast.error('An error occurred while processing your request.', 'Error', 5000);
-    });
-  }
+  // Single DOMContentLoaded — initialize features once DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      // Accessibility + keyboard nav
+      initAccessibilityControls();
+      initKeyboardNavigation();
 
-  if (toastWarningBtn) {
-    toastWarningBtn.addEventListener('click', () => {
-      toast.warning('Please review your input before proceeding.', 'Warning', 5000);
-    });
-  }
+      // Wire up toast demo controls if they exist
+      const toastPositionSelect = $('toast-position-select');
+      const clearAllToastsBtn = $('clear-all-toasts-btn');
+      const toastSuccessBtn = $('toast-success-btn');
+      const toastErrorBtn = $('toast-error-btn');
+      const toastWarningBtn = $('toast-warning-btn');
+      const toastInfoBtn = $('toast-info-btn');
 
-  if (toastInfoBtn) {
-    toastInfoBtn.addEventListener('click', () => {
-      toast.info('This is an informational message for you.', 'Information', 5000);
-    });
-  }
+      if (toastPositionSelect && typeof toast !== 'undefined') {
+        toastPositionSelect.addEventListener('change', (e) => {
+          toast.setPosition(e.target.value);
+          toast.info(`Toast position changed to: ${e.target.value}`, 'Position Updated', 3000);
+        });
+      }
 
-  if (toastPositionSelect) {
-    toastPositionSelect.addEventListener('change', (e) => {
-      toast.setPosition(e.target.value);
-      toast.info(`Toast position changed to: ${e.target.value.replace('-', ' ')}`, 'Position Updated', 3000);
-    });
-  }
+      if (clearAllToastsBtn && typeof toast !== 'undefined') {
+        clearAllToastsBtn.addEventListener('click', () => toast.clearAll());
+      }
 
-  if (clearAllToastsBtn) {
-    clearAllToastsBtn.addEventListener('click', () => {
-      toast.clearAll();
-    });
-  }
-});
+      if (toastSuccessBtn && typeof toast !== 'undefined') {
+        toastSuccessBtn.addEventListener('click', () => toast.success('Your operation completed successfully!', 'Success', 5000));
+      }
+      if (toastErrorBtn && typeof toast !== 'undefined') {
+        toastErrorBtn.addEventListener('click', () => toast.error('An error occurred while processing your request.', 'Error', 5000));
+      }
+      if (toastWarningBtn && typeof toast !== 'undefined') {
+        toastWarningBtn.addEventListener('click', () => toast.warning('Please review your input before proceeding.', 'Warning', 5000));
+      }
+      if (toastInfoBtn && typeof toast !== 'undefined') {
+        toastInfoBtn.addEventListener('click', () => toast.info('This is an informational message for you.', 'Information', 5000));
+      }
+
+      // Theme toggle button: check existence
+      const themeToggleBtn = $('theme-toggle');
+      if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+          document.body.classList.toggle('dark-theme');
+          localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark-theme' : 'light-theme');
+        });
+      }
+
+    } catch (err) {
+      // Log to console so you can see any runtime errors
+      console.error('Initialization error:', err);
+    }
+  });
+
+})(); 
+// ...existing code...
+
 
 document.addEventListener('DOMContentLoaded', () => {
-  // --- Task Management ---
-  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-
-  const taskInput = document.getElementById('task-input');
-  const addTaskBtn = document.getElementById('add-task-btn');
-  const taskList = document.getElementById('task-list');
-
-  function renderTasks() {
-    taskList.innerHTML = '';
-    tasks.forEach((task) => {
-      const li = document.createElement('li');
-      li.textContent = task;
-      li.className = 'task-item';
-      taskList.appendChild(li);
-    });
-  }
 
   function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -2106,10 +2150,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTasks();
     saveTasks();
     toast.success('Task added successfully!', 'Task Added');
-  });
+  })
 
   // Initial render
-  renderTasks();
+ 
 
   // --- Data Persistence ---
   const exportBtn = document.getElementById('export-btn');
@@ -2268,4 +2312,35 @@ document.body.appendChild(toggleThemeBtn);
 
 toggleThemeBtn.addEventListener('click', () => {
   document.body.classList.toggle('dark-theme');
+});
+})})
+// === Accessibility: High Contrast Mode ===
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleContrastBtn = document.getElementById("toggle-contrast");
+  const contrastStylesheet = document.getElementById("high-contrast-stylesheet");
+
+  if (!toggleContrastBtn) {
+    console.error("High contrast button not found!");
+    return;
+  }
+  if (!contrastStylesheet) {
+    console.error("High contrast stylesheet not found!");
+    return;
+  }
+
+  toggleContrastBtn.addEventListener("click", () => {
+    if (contrastStylesheet.disabled) {
+      contrastStylesheet.disabled = false;
+      document.body.style.backgroundColor = "#000";
+      document.body.style.color = "#fff";
+      toggleContrastBtn.textContent = "Normal Mode";
+      console.log("✅ High Contrast Enabled");
+    } else {
+      contrastStylesheet.disabled = true;
+      document.body.style.backgroundColor = "";
+      document.body.style.color = "";
+      toggleContrastBtn.textContent = "High Contrast";
+      console.log("⬜ Normal Mode Enabled");
+    }
+  });
 });

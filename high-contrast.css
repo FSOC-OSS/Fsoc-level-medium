@@ -1,0 +1,36 @@
+/* high-contrast.css */
+body {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+.card, header, footer, nav, section, .task-manager, .weather-widget {
+  background-color: #111 !important;
+  color: #fff !important;
+  border: 1px solid #fff !important;
+}
+
+button, input, select, textarea {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 1px solid #fff !important;
+}
+
+/* === Accessibility Controls - High Contrast Mode === */
+#accessibility-controls {
+  background-color: #000 !important;
+  border-bottom: 1px solid #ecdfdf !important;
+}
+
+#accessibility-controls button {
+  background-color: #edcece !important;
+  color: #000 !important;
+  border: 2px solid #fff !important;
+  font-weight: bold;
+}
+
+#accessibility-controls button:hover {
+  background-color: #e8d0d0 !important;
+  color: #000 !important;
+}
+

@@ -22,10 +22,54 @@ body.dark-theme {
 
 /* Apply variables */
 body {
-  background-color: var(--body-bg);
-  color: var(--text-color);
-  transition: all 0.3s ease;
+  background-color: #e8fc87;
+  color: #222;
+  font-family: 'Poppins', sans-serif;
 }
+
+/* Accessibility Toolbar Styling */
+#accessibility-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background-color: #222;       /* dark background for visibility */
+  color: #fff;
+  border: 2px solid #000;       /* black border box */
+  border-radius: 10px;
+  padding: 10px 20px;
+  width: fit-content;
+  margin: 20px auto;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+}
+
+/* Buttons inside toolbar */
+#accessibility-controls button {
+  background-color: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#accessibility-controls button:hover {
+  background-color: #000;
+  color: #fff;
+}
+
+/* Dropdown for text spacing */
+#accessibility-controls select {
+  background-color: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 5px;
+  padding: 4px;
+}
+
 
 .card,
 .task-item,
@@ -58,6 +102,23 @@ button:hover {
   background-color: var(--primary-hover-color);
 }
 
+#accessibility-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  background: #f4f4f4;
+  border-bottom: 1px solid #ddd;
+  align-items: center;
+  justify-content: center;
+}
+
+#accessibility-toolbar button,
+#accessibility-toolbar select {
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: 1px solid #aaa;
+}
 
 
 
@@ -1953,3 +2014,36 @@ footer a:hover {
   .card { padding: 1rem; }
 }
 
+
+/* -------------------------------
+   Accessibility Toolbar Styling
+--------------------------------*/
+.accessibility-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 2px solid #000;        /* black border */
+  border-radius: 8px;
+  padding: 10px 20px;
+  width: fit-content;
+  margin: 15px auto;             /* center horizontally */
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.accessibility-controls button,
+.accessibility-controls select {
+  background: #f7f7f7;
+  border: 1px solid #999;
+  border-radius: 5px;
+  padding: 6px 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.accessibility-controls button:hover,
+.accessibility-controls select:hover {
+  background: #000;
+  color: #fff;
+}
