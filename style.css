@@ -1,39 +1,147 @@
 /* --- Root Variables for Theming ---h */ 
 :root {
-    --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #f4f7f9 100%);
-    --bg-color: #f4f7f9;
-    --card-bg-color: rgba(255,255,255,0.85);
-    --text-color: #22223b;
-    --primary-color: #4f8cff;
-    --primary-hover-color: #2563eb;
-    --logo-color: #007bff;
-    --secondary-color: #6c757d;
-    --border-color: #e0e0e0;
-    --shadow-color: rgba(80, 112, 255, 0.08);
-    --completed-color: #999;
-    --navbar-glass: rgba(255,255,255,0.7);
-    --navbar-border: rgba(79,140,255,0.15);
-    --accent: #e94560;
-    --priority-high: #dc3545;
-    --priority-high-bg: #ffeaea;
-    --priority-medium: #ffc107;
-    --priority-medium-bg: #fff9e6;
-    --priority-low: #28a745;
-    --priority-low-bg: #e6fff2;
-    --input-bg: rgba(255,255,255,0.7);
-    --transition-speed: 0.3s;
+  --body-bg: #b5bccd;
+  --card-bg-color: #6eaebb;
+  --text-color: #1e1e1e;
+  --border-color: #e5e5e5;
+  --primary-color: #4f8cff;
+  --primary-hover-color: #3b7eff;
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-:root.dark-theme,
+/* === Dark Theme === */
+body.dark-theme {
+  --body-bg: #121212;
+  --card-bg-color: #1e1e2f;
+  --text-color: #e0e0e0;
+  --border-color: #2a2a3b;
+  --primary-color: #4f8cff;
+  --primary-hover-color: #00aaff;
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Apply variables */
+body {
+  background-color: var(--body-bg);
+  color: var(--text-color);
+  transition: all 0.3s ease;
+}
+
+.card,
+.task-item,
+.weather-card,
+.filter-box {
+  background-color: var(--card-bg-color);
+  color: var(--text-color);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+input,
+select,
+textarea {
+  background-color: var(--card-bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--primary-hover-color);
+}
+
+
+
+
+
+/* Add this after your root variables */
+
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    height: 100vh;
+    width: 250px;
+    background: var(--card-bg-color);
+    box-shadow: 2px 0 10px var(--shadow-color);
+    transition: left 0.3s ease;
+    z-index: 1000;
+    padding: 2rem 1rem;
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 2rem;
+}
+
+.sidebar ul li {
+    margin-bottom: 1rem;
+}
+
+.sidebar ul li a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    display: block;
+    border-radius: 8px;
+    transition: background 0.3s;
+}
+
+.sidebar ul li a:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Hamburger Menu */
+.hamburger {
+    display: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
 .dark-theme {
-    --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  --bg-color: #1e1e2f;
+  --card-bg-color: #2c2c3c;
+  --text-color: #f0f0f0;
+  --accent-color: #6aa9ff;
+  --border-color: #3a3a4a;
+}
+
+body.dark-theme {
+    --bg-gradient: linear-gradient(135deg, #23243a 0%, #1a1a2e 100%);
+    --logo-color: #a9c649;
     --bg-color: #1a1a2e;
-    --card-bg-color: rgba(22,33,62,0.95);
-    --text-color: #e0e0e0;
-    --primary-color: #4f8cff;
-    --primary-hover-color: #6ba3ff;
-    --logo-color: #4f8cff;
-    --secondary-color: #a0a0a0;
+    --card-bg-color: rgba(22,33,62,0.92);
+    --text-color: #257178;
+    --primary-color: #0f3460;
+    --primary-hover-color: #e94560;
     --border-color: #2a3b5c;
     --shadow-color: rgba(0, 0, 0, 0.5);
     --completed-color: #666;
@@ -56,22 +164,58 @@
 }
 
 body {
-    font-family: 'Poppins', sans-serif;
-    background: var(--bg-gradient);
-    color: var(--text-color);
-    min-height: 100vh;
-    transition: background 0.5s, color 0.3s;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background: var(--body-bg);
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  color: var(--dark-color);
+  margin-bottom: var(--spacing-unit);
 }
 
 
-
+/* Layout & Container */
 .container {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: calc(var(--spacing-unit) * 2);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: calc(var(--spacing-unit) * 2);
+}
+/* Card Styles */
+.card {
+  background: var(--card-bg-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: calc(var(--spacing-unit) * 1.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md), 0 6px 12px rgba(0,0,0,0.08);
+}
+
+/* Form Elements */
+input, select, button {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  transition: all 0.2s ease;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(79,140,255,0.1);
 }
 
 /* --- Header & Navigation --- */
@@ -81,19 +225,25 @@ header {
     padding: 1rem 2rem;
 }
 
-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 2rem auto 2.5rem auto;
-    padding: 1.2rem 2.5rem;
-    border-radius: 18px;
-    background: var(--navbar-glass);
-    box-shadow: 0 8px 32px 0 var(--shadow-color);
-    border: 1.5px solid var(--navbar-border);
-    backdrop-filter: blur(12px);
+
+  nav {
+  background-color: white;
+  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--border-color);
 }
+
+nav a {
+  color: var(--dark-color);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+nav a:hover {
+  background-color: rgba(79, 140, 255, 0.1);
+}
+
 
 .logo {
     font-size: 2rem;
@@ -139,6 +289,8 @@ nav {
     text-shadow: 0 2px 8px rgba(79,140,255,0.10);
 }
 
+
+
 .theme-btn {
     background: linear-gradient(90deg, var(--primary-color) 60%, var(--primary-hover-color) 100%);
     color: #fff;
@@ -164,16 +316,14 @@ nav {
 
 /* --- Card Styles --- */
 .card {
-    background: var(--card-bg-color);
-    border-radius: 20px;
-    padding: 2.5rem 2rem 2rem 2rem;
-    box-shadow: 0 8px 32px 0 var(--shadow-color);
-    border: 1.5px solid var(--border-color);
-    transition: background 0.3s, box-shadow 0.3s;
-    backdrop-filter: blur(6px);
-    position: relative;
-    overflow: hidden;
+  background-color: var(--card-bg-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  margin: 1rem;
+  border: 1px solid var(--border-color);
 }
+
 
 .card::before {
     content: "";
@@ -192,6 +342,28 @@ nav {
     position: relative;
     z-index: 1;
 }
+
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 0.5rem 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+  background-color: #366de3;
+  transform: translateY(-2px);
+}
+
+button:disabled {
+  background-color: #b0c4ff;
+  cursor: not-allowed;
+}
+
 
 /* --- Task Manager --- */
 .task-manager h2, .weather-widget h2 {
@@ -487,23 +659,18 @@ nav {
     box-shadow: 0 2px 8px rgba(79,140,255,0.08);
 }
 
-button,
-#add-task-btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    background: linear-gradient(90deg, var(--primary-color) 60%, var(--primary-hover-color) 100%);
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.1s, filter 0.1s;
-    box-shadow: 0 2px 8px rgba(79,140,255,0.10);
+button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
 }
 
-button:hover,
-#add-task-btn:hover {
-    background: linear-gradient(90deg, var(--primary-hover-color) 60%, var(--primary-color) 100%);
-    filter: brightness(1.08);
+
+button:hover {
+  background: darken(var(--primary-color), 10%);
+  transform: translateY(-1px);
 }
 
 button:active,
@@ -1687,3 +1854,102 @@ n
         justify-content: space-between;
     }
 }
+
+
+@media (max-width: 768px) {
+    .hamburger {
+        display: block;
+    }
+    .nav-links {
+        display: none;
+    }
+}
+h1, h2, h3 {
+  color: var(--accent-color);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.card h2 {
+  font-size: 1.4rem;
+  border-bottom: 2px solid var(--accent-color);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.card {
+  background: var(--card-bg-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+}
+
+button, .filter-btn, .view-mode-btn {
+  background: var(--accent-color);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+button:hover {
+  background: #3f7ae0;
+  transform: translateY(-1px);
+}
+
+input, select {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+input:focus, select:focus {
+  border-color: var(--accent-color);
+}
+
+.sidebar {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+.sidebar.active {
+  transform: translateX(0);
+}
+
+footer {
+  background: var(--card-bg-color);
+  border-top: 1px solid var(--border-color);
+  padding: 1.5rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+footer a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  nav .nav-links { display: none; }
+  .hamburger { display: block; }
+  .container { grid-template-columns: 1fr; }
+  .card { padding: 1rem; }
+}
+

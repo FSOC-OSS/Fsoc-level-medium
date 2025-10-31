@@ -1,3 +1,9 @@
+// --- Constants & Configurations ---
+const WEATHER_API_KEY = "4b1ee5452a2e3f68205153f28bf93927";
+const DEBOUNCE_DELAY = 500;
+const WEATHER_TIMEOUT_MS = 8000;
+const MAX_RETRIES = 3;
+
 // --- Toast Notification System ---
 class ToastNotification {
   constructor(options = {}) {
@@ -143,139 +149,7 @@ const toast = new ToastNotification({
   maxToasts: 5
 });
 
-class ThemeManager {
-  constructor() {
-    this.THEME_KEY = 'taskManager_theme';
-    this.themes = {
-      LIGHT: 'light',
-      DARK: 'dark'
-    };
-    this.currentTheme = this.getInitialTheme();
-    this.init();
-  }
-
-  getInitialTheme() {
-    const savedTheme = localStorage.getItem(this.THEME_KEY);
-    if (savedTheme && Object.values(this.themes).includes(savedTheme)) {
-      return savedTheme;
-    }
-
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return this.themes.DARK;
-    }
-
-    return this.themes.LIGHT;
-  }
-
-  init() {
-    this.applyTheme(this.currentTheme, false);
-    this.setupThemeToggle();
-    this.watchSystemTheme();
-    this.updateButtonText();
-  }
-
-  applyTheme(theme, animate = true) {
-    const root = document.documentElement;
-    
-    if (!animate) {
-      root.style.transition = 'none';
-    }
-
-    if (theme === this.themes.DARK) {
-      root.classList.add('dark-theme');
-      document.body.classList.add('dark-theme');
-    } else {
-      root.classList.remove('dark-theme');
-      document.body.classList.remove('dark-theme');
-    }
-
-    if (!animate) {
-      setTimeout(() => {
-        root.style.transition = '';
-      }, 50);
-    }
-
-    this.currentTheme = theme;
-    localStorage.setItem(this.THEME_KEY, theme);
-    this.dispatchThemeChangeEvent(theme);
-  }
-
-  toggleTheme() {
-    const newTheme = this.currentTheme === this.themes.DARK 
-      ? this.themes.LIGHT 
-      : this.themes.DARK;
-    
-    this.applyTheme(newTheme, true);
-    this.updateButtonText();
-
-    const icon = newTheme === this.themes.DARK ? '🌙' : '☀️';
-    const themeName = newTheme === this.themes.DARK ? 'Dark' : 'Light';
-    toast.info(
-      `Switched to ${themeName.toLowerCase()} mode`,
-      `${icon} ${themeName} Mode`,
-      3000
-    );
-  }
-
-  setupThemeToggle() {
-    const themeBtn = document.getElementById('theme-toggle');
-    if (themeBtn) {
-      themeBtn.addEventListener('click', () => this.toggleTheme());
-      
-      document.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-          e.preventDefault();
-          this.toggleTheme();
-        }
-      });
-    }
-  }
-
-  updateButtonText() {
-    const themeBtn = document.getElementById('theme-toggle');
-    if (themeBtn) {
-      const icon = this.currentTheme === this.themes.DARK ? '☀️' : '🌙';
-      const text = this.currentTheme === this.themes.DARK ? 'Light Mode' : 'Dark Mode';
-      themeBtn.textContent = `${icon} ${text}`;
-    }
-  }
-
-  watchSystemTheme() {
-    if (window.matchMedia) {
-      const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      
-      if (darkModeQuery.addEventListener) {
-        darkModeQuery.addEventListener('change', (e) => {
-          const savedTheme = localStorage.getItem(this.THEME_KEY);
-          if (!savedTheme) {
-            const newTheme = e.matches ? this.themes.DARK : this.themes.LIGHT;
-            this.applyTheme(newTheme, true);
-            this.updateButtonText();
-          }
-        });
-      }
-    }
-  }
-
-  dispatchThemeChangeEvent(theme) {
-    const event = new CustomEvent('themechange', {
-      detail: { theme }
-    });
-    window.dispatchEvent(event);
-  }
-
-  getCurrentTheme() {
-    return this.currentTheme;
-  }
-
-  isDarkMode() {
-    return this.currentTheme === this.themes.DARK;
-  }
-}
-
-const themeManager = new ThemeManager();
-window.themeManager = themeManager;
-
+// --- Document Ready Handler ---
 document.addEventListener("DOMContentLoaded", () => {
   const modalBackdrop = document.getElementById('modal-backdrop');
   if (modalBackdrop) {
@@ -307,6 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const weatherInfo = document.getElementById("weather-info");
   const yearSpan = document.getElementById("year");
 
+  // --- State Management ---
   let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
   let tagRegistry = JSON.parse(localStorage.getItem("tags")) || {};
   let activeTagFilter = null;
@@ -2082,6 +1957,62 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 700);
   }
 
+
+
+// --- Toast Notification System ---
+class ToastNotification {
+    // ...existing toast notification code...
+}
+
+// Initialize global toast instance
+const toast = new ToastNotification({
+    position: 'top-right',
+    defaultDuration: 5000,
+    maxToasts: 5
+});
+
+// --- Document Ready Handler ---
+document.addEventListener("DOMContentLoaded", () => {
+    // --- DOM Elements ---
+    // ...existing element selections...
+
+    // --- State Management ---
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    let tagRegistry = JSON.parse(localStorage.getItem("tags")) || {};
+    let activeTagFilter = null;
+    let currentFilter = "all";
+    let sortType = "none";
+    let currentWeatherController = null;
+
+    // --- Utility Functions ---
+    // ...existing utility functions...
+
+    // --- Task Management Functions ---
+    // ...existing task management code...
+
+    // --- Weather Functions ---
+    // ...existing weather functions...
+
+    // --- Event Handlers ---
+    // ...existing event handlers...
+
+    // --- Modal System ---
+    // ...existing modal code...
+
+    // --- Initialization ---
+    function init() {
+        applyFiltersFromURL();
+        updateCategoryDropdown();
+        renderTasksWithSkeleton();
+        updateTaskProgressBar();
+        if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+        getLocationWeather();
+    }
+    
+
+    // Start the application
+    init();
+});
   function init() {
     // Load filters from URL
     applyFiltersFromURL();
@@ -2140,4 +2071,201 @@ document.addEventListener("DOMContentLoaded", () => {
       toast.clearAll();
     });
   }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  // --- Task Management ---
+  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+  const taskInput = document.getElementById('task-input');
+  const addTaskBtn = document.getElementById('add-task-btn');
+  const taskList = document.getElementById('task-list');
+
+  function renderTasks() {
+    taskList.innerHTML = '';
+    tasks.forEach((task) => {
+      const li = document.createElement('li');
+      li.textContent = task;
+      li.className = 'task-item';
+      taskList.appendChild(li);
+    });
+  }
+
+  function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
+
+  addTaskBtn.addEventListener('click', () => {
+    const task = taskInput.value.trim();
+    if (!task) {
+      toast.warning('Please enter a task before adding', 'Task Required');
+      return;
+    }
+    tasks.push(task);
+    taskInput.value = '';
+    renderTasks();
+    saveTasks();
+    toast.success('Task added successfully!', 'Task Added');
+  });
+
+  // Initial render
+  renderTasks();
+
+  // --- Data Persistence ---
+  const exportBtn = document.getElementById('export-btn');
+  const importBtn = document.getElementById('import-btn');
+  const importFile = document.getElementById('import-file');
+  const clearBtn = document.getElementById('clear-btn');
+
+  // Export JSON
+  exportBtn.addEventListener('click', () => {
+    const data = { tasks };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'task-manager-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Your data has been exported successfully!', 'Export Complete');
+  });
+
+  // Import JSON
+  importBtn.addEventListener('click', () => importFile.click());
+
+  importFile.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const importedData = JSON.parse(evt.target.result);
+        if (!importedData.tasks || !Array.isArray(importedData.tasks)) {
+          toast.error('The file format is invalid. Please upload a valid JSON file.', 'Invalid JSON File');
+          return;
+        }
+        tasks = importedData.tasks;
+        renderTasks();
+        saveTasks();
+        toast.success('Your data has been imported successfully!', 'Import Complete');
+      } catch (err) {
+        toast.error(`Failed to import JSON: ${err.message}`, 'Import Error');
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Clear all data
+  clearBtn.addEventListener('click', () => {
+    if (!confirm('Are you sure you want to clear all data?')) return;
+    tasks = [];
+    localStorage.removeItem('tasks');
+    renderTasks();
+    toast.info('All data has been cleared', 'Data Cleared');
+  });
+});
+const modalBackdrop = document.getElementById('modal-backdrop');
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modal-title');
+const modalBody = document.getElementById('modal-body');
+const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+const modalCancelBtn = document.getElementById('modal-cancel-btn');
+const modalCloseBtn = document.getElementById('modal-close-btn');
+
+let lastFocusedElement = null;
+let confirmCallback = null;
+let cancelCallback = null;
+
+function openModal({ title, body, type = 'alert', onConfirm, onCancel }) {
+    lastFocusedElement = document.activeElement;
+    modalTitle.textContent = title || '';
+    modalBody.innerHTML = body || '';
+    modalBackdrop.style.display = 'flex';
+    document.body.classList.add('modal-open');
+    modal.setAttribute('tabindex', '-1');
+    modal.focus();
+
+    // Show/hide buttons based on type
+    modalConfirmBtn.style.display = type === 'confirm' ? '' : 'none';
+    modalCancelBtn.style.display = type === 'confirm' ? '' : 'none';
+    modalCloseBtn.style.display = type === 'alert' || type === 'form' ? '' : 'none';
+
+    confirmCallback = typeof onConfirm === 'function' ? onConfirm : null;
+    cancelCallback = typeof onCancel === 'function' ? onCancel : null;
+}
+
+function closeModal() {
+    modalBackdrop.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    if (lastFocusedElement) lastFocusedElement.focus();
+    confirmCallback = null;
+    cancelCallback = null;
+}
+
+// Button events
+modalConfirmBtn.onclick = () => {
+    if (confirmCallback) confirmCallback();
+    closeModal();
+};
+modalCancelBtn.onclick = () => {
+    if (cancelCallback) cancelCallback();
+    closeModal();
+};
+modalCloseBtn.onclick = closeModal;
+
+// Keyboard accessibility
+modalBackdrop.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
+    // Focus trap
+    const focusable = modalBackdrop.querySelectorAll('button, [tabindex]:not([tabindex="-1"])');
+    if (e.key === 'Tab') {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+            last.focus();
+            e.preventDefault();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            first.focus();
+            e.preventDefault();
+        }
+    }
+});
+// ===== Theme Toggle =====
+const themeToggleBtn = document.getElementById("theme-toggle");
+
+// Check if the user already had a theme saved
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme === "dark-theme") {
+  document.body.classList.add("dark-theme");
+}
+
+// Toggle when the button is clicked
+themeToggleBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-theme");
+
+  // Save the current theme in localStorage
+  if (document.body.classList.contains("dark-theme")) {
+    localStorage.setItem("theme", "dark-theme");
+  } else {
+    localStorage.setItem("theme", "light-theme");
+  }
+});
+const toggleThemeBtn = document.createElement('button');
+toggleThemeBtn.textContent = '🌓 Toggle Theme';
+toggleThemeBtn.style.position = 'fixed';
+toggleThemeBtn.style.bottom = '20px';
+toggleThemeBtn.style.right = '20px';
+toggleThemeBtn.style.padding = '8px 12px';
+toggleThemeBtn.style.borderRadius = '8px';
+toggleThemeBtn.style.border = 'none';
+toggleThemeBtn.style.background = '#4f8cff';
+toggleThemeBtn.style.color = 'white';
+toggleThemeBtn.style.cursor = 'pointer';
+toggleThemeBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+document.body.appendChild(toggleThemeBtn);
+
+toggleThemeBtn.addEventListener('click', () => {
+  document.body.classList.toggle('dark-theme');
 });

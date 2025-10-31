@@ -1,247 +1,279 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fsoc-Medium | Smart Task Manager & Weather Dashboard</title>
-    <link rel="stylesheet" href="style.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-</head>
-<body>
-    <div class="sidebar" id="sidebar">
-        <button class="close-btn" id="close-btn">×</button>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Fsoc-Medium | Smart Task Manager & Weather Dashboard</title>
+        <link rel="stylesheet" href="style.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous" ></script>
+    </head>
+    <body>
+    
+        <div class="sidebar" id="sidebar">
+  <button class="close-btn" id="close-btn">×</button>
+  <ul>
+    <li><a href="#dashboard" id="hamburger-tabs">Home</a></li>
+    <li><a href="about.html" id="hamburger-tabs">About</a></li>
+    <li><a href="contact.html" id="hamburger-tabs">Contact</a></li>
+  </ul>
+</div>
+        <header>
+            <nav>
+                <div class="logo">Fsoc-Medium</div>
+                <div class="hamburger" id="hamburger">☰</div>
+                <ul class="nav-links">
+                    <li>
+                        <a href="#dashboard" class="nav-link active"
+                            >Dashboard</a
+                        >
+                    </li>
+                    <li><a href="about.html" class="nav-link">About</a></li>
+                    <li><a href="contact.html" class="nav-link">Contact</a></li>
+                </ul>
+                <button id="theme-toggle" class="theme-btn">
+                    Toggle Theme
+                </button>
+            </nav>
+        </header>
+        <main class="container">
+            <section class="card task-manager">
+                <h2>My Tasks</h2>
+                <div class="task-input-container">
+                    <input
+                        type="text"
+                        id="task-input"
+                        placeholder="Ready to crush your next goal?"
+                    />
+                    <input type="text" id="task-tags" placeholder="Add tags (space separated)" />
+                    <input
+                        type="date"
+                        id="due-date-input"
+                        placeholder="Due date"
+                        style="max-width: 160px;"
+                    />
+                    <select id="priority-select">
+                        <option value="3">🟢 Low</option>
+                        <option value="2" selected>🟡 Medium</option>
+                        <option value="1">🔴 High</option>
+                    </select>
+                    <button id="add-task-btn">Add Task</button>
+                </div>
+                <div class="tags-row">
+                    <div id="tag-suggestions" class="tag-suggestions" aria-live="polite"></div>
+                    <div id="popular-tags" class="popular-tags"></div>
+                    <div id="active-tag-filter" class="active-tag-filter"></div>
+                    <select id="tag-filter-select" aria-label="Filter by tag"></select>
+                    <button id="clear-tag-filter-btn" class="manage-tags-btn">Clear</button>
+                </div>
+                <div id="tag-manager" class="tag-manager" style="display:none; margin-bottom:0.75rem;"></div>
+                <div class="task-search-area">
+                    <input type="text" id="task-search" placeholder="Search tasks..." />
+                    <div class="search-controls">
+                        <button id="search-btn">Search</button>
+                        <button id="clear-search-btn">Clear</button>
+                        <span id="search-count"></span>
+                    </div>
+                </div>
+                <div class="advanced-filter-panel">
+                    <div class="filter-header">
+                        <h3>Advanced Filters</h3>
+                        <button id="toggle-filters-btn" class="toggle-filters-btn">
+                            Show Filters
+                        </button>
+                    </div>
+                    <div class="filter-content" id="filter-content" style="display: none;">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label for="filter-status">Status:</label>
+                                <select id="filter-status" class="filter-select">
+                                    <option value="">All</option>
+                                    <option value="active">Active</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="filter-priority">Priority:</label>
+                                <select id="filter-priority" class="filter-select">
+                                    <option value="">All</option>
+                                    <option value="1">🔴 High</option>
+                                    <option value="2">🟡 Medium</option>
+                                    <option value="3">🟢 Low</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="filter-category">Category:</label>
+                                <select id="filter-category" class="filter-select">
+                                    <option value="">All Tags</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label for="filter-date-from">Due Date From:</label>
+                                <input type="date" id="filter-date-from" class="filter-input" />
+                            </div>
+                            <div class="filter-group">
+                                <label for="filter-date-to">Due Date To:</label>
+                                <input type="date" id="filter-date-to" class="filter-input" />
+                            </div>
+                            <div class="filter-group filter-actions">
+                                <button id="apply-filters-btn" class="apply-filters-btn">
+                                    Apply Filters
+                                </button>
+                                <button id="clear-all-filters-btn" class="clear-filters-btn">
+                                    Clear All Filters
+                                </button>
+                            </div>
+                        </div>
+                        <div class="active-filters-display" id="active-filters-display"></div>
+                    </div>
+                </div>
+                <div class="task-filters">
+                    <button class="filter-btn active" data-filter="all">
+                        All
+                    </button>
+                    <button
+                        class="filter-btn"
+                        id="filter-active"
+                        data-filter="active"
+                    >
+                        Active
+                    </button>
+                    <button
+                        class="filter-btn"
+                        id="filter-completed"
+                        data-filter="completed"
+                    >
+                        Completed
+                    </button>
+                    <button class="filter-btn priority-filter" data-filter="priority-1">
+                        🔴 High
+                    </button>
+                    <button class="filter-btn priority-filter" data-filter="priority-2">
+                        🟡 Medium
+                    </button>
+                    <button class="filter-btn priority-filter" data-filter="priority-3">
+                        🟢 Low
+                    </button>
+                </div>
+                <div class="task-progress-container">
+                    <div class="task-progress-bar-bg">
+                        <div class="task-progress-bar-fill" id="task-progress-bar"></div>
+                    </div>
+                    <div class="task-progress-info">
+                        <span id="task-progress-percent" class="task-progress-percent">0%</span>
+                        <span id="task-progress-summary" class="task-progress-summary"></span>
+                        <div class="task-progress-ring">
+                            <svg width="60" height="60">
+                                <circle cx="30" cy="30" r="26" stroke="#e0e0e0" stroke-width="6" fill="none"/>
+                                <circle id="task-progress-ring" cx="30" cy="30" r="26" stroke="#4f8cff" stroke-width="6" fill="none" stroke-linecap="round" />
+                            </svg>
+                            <span id="task-progress-ring-label" class="task-progress-ring-label">0%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="view-mode-toggle">
+                    <button class="view-mode-btn" id="list-mode-btn">List</button>
+                    <button class="view-mode-btn" id="grid-mode-btn">Grid</button>
+                    <button class="view-mode-btn" id="compact-mode-btn">Compact</button>
+                </div>
+                <ul id="task-list"></ul>
+                <div class="task-actions">
+                    <button id="sort-priority-btn">Sort by Priority</button>
+                    <button id="sort-date-btn">Sort by Date</button>
+                    <button id="sort-tasks-btn">Sort A-Z</button>
+                    <button id="export-data-btn">Export Data</button>
+                    <button id="import-data-btn">Import Data</button>
+                    <button id="clear-all-btn">Clear All</button>
+                </div>
+                <input
+                    type="file"
+                    id="import-file-input"
+                    accept=".json"
+                    style="display: none"
+                />
+            </section>
+            <section class="card weather-widget">
+                <h2>Weather Report</h2>
+                <div class="weather-search" style="justify-content: center">
+                    <input
+                        type="text"
+                        id="city-input"
+                        placeholder="Search city..."
+                    />
+                    <button id="search-weather-btn">Search</button>
+                    <button id="get-location-btn">
+                        Get My Location Weather
+                    </button>
+                </div>
+                <div id="weather-info" role="status" aria-live="polite">
+                    <p class="loading-text">
+                        Search for a city or use your location to see the
+                        weather...
+                    </p>
+                </div>
+            </section>
+            <section class="card toast-demo-section">
+                <h2>Toast Notifications Demo</h2>
+                <p style="margin-bottom: 1rem; font-size: 14px; opacity: 0.85;">Test the custom toast notification system with different types and positioning:</p>
+                <div class="toast-demo-buttons">
+                    <button id="toast-success-btn" class="demo-btn success-btn">Success Toast</button>
+                    <button id="toast-error-btn" class="demo-btn error-btn">Error Toast</button>
+                    <button id="toast-warning-btn" class="demo-btn warning-btn">Warning Toast</button>
+                    <button id="toast-info-btn" class="demo-btn info-btn">Info Toast</button>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <label for="toast-position-select" style="font-weight: 500; margin-right: 0.5rem;">Position:</label>
+                    <select id="toast-position-select" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--card-bg-color); color: var(--text-color);">
+                        <option value="top-right">Top Right</option>
+                        <option value="top-left">Top Left</option>
+                        <option value="bottom-right">Bottom Right</option>
+                        <option value="bottom-left">Bottom Left</option>
+                        <option value="top-center">Top Center</option>
+                        <option value="bottom-center">Bottom Center</option>
+                    </select>
+                    <button id="clear-all-toasts-btn" class="demo-btn" style="margin-left: 1rem;">Clear All Toasts</button>
+                </div>
+            </section>
+            <!-- Add this right before the closing </main> tag -->
+<div id="shortcut-modal" class="modal">
+    <div class="modal-content">
+        <h3>Keyboard Shortcuts</h3>
         <ul>
-            <li><a href="#dashboard" class="hamburger-link">Home</a></li>
-            <li><a href="about.html" class="hamburger-link">About</a></li>
-            <li><a href="contact.html" class="hamburger-link">Contact</a></li>
+            <li><b>Enter</b>: Add Task (when input focused)</li>
+            <li><b>Ctrl+N</b>: Add Task</li>
+            <li><b>/</b>: Focus Task Input</li>
+            <li><b>Arrow Up/Down</b>: Navigate Tasks</li>
+            <li><b>Ctrl+Enter</b>: Complete Selected Task</li>
+            <li><b>Delete</b>: Delete Selected Task</li>
+            <li><b>Ctrl+S</b>: Sort Tasks</li>
+            <li><b>Ctrl+Shift+C</b>: Clear All Tasks</li>
+            <li><b>?</b>: Show Shortcut Help</li>
+            <li><b>Esc</b>: Close Shortcut Help</li>
         </ul>
+        <button id="close-shortcut-modal">Close</button>
     </div>
-
-    <header>
-        <nav>
-            <div class="logo">Fsoc-Medium</div>
-            <div class="hamburger" id="hamburger">☰</div>
-            <ul class="nav-links">
-                <li><a href="#dashboard" class="nav-link active">Dashboard</a></li>
-                <li><a href="about.html" class="nav-link">About</a></li>
-                <li><a href="contact.html" class="nav-link">Contact</a></li>
-            </ul>
-            <button id="theme-toggle" class="theme-btn">🌙 Dark Mode</button>
-        </nav>
-    </header>
-
-    <main class="container">
-        <section class="card task-manager">
-            <h2>My Tasks</h2>
-            <div class="task-input-container">
-                <input type="text" id="task-input" placeholder="Ready to crush your next goal?" />
-                <input type="text" id="task-tags" placeholder="Add tags (space separated)" />
-                <input type="date" id="due-date-input" placeholder="Due date" style="max-width: 160px;" />
-                <select id="priority-select">
-                    <option value="3">🟢 Low</option>
-                    <option value="2" selected>🟡 Medium</option>
-                    <option value="1">🔴 High</option>
-                </select>
-                <button id="add-task-btn">Add Task</button>
+</div>
+        </main>
+        <footer>
+            <p>
+                &copy; <span id="year"></span> Fsoc-Medium Project. All rights
+                reserved.
+            </p>
+            <div class="footer-nav">
+                <a href="index.html">Dashboard</a> |
+                <a href="about.html">About</a> | <a href="#contact">Contact</a>
             </div>
+            </footer>
+            
+         <!-- Toast Notification Container -->
+        <div id="toast-container" class="toast-container"></div>
 
-            <div class="tags-row">
-                <div id="tag-suggestions" class="tag-suggestions" aria-live="polite"></div>
-                <div id="popular-tags" class="popular-tags"></div>
-                <div id="active-tag-filter" class="active-tag-filter"></div>
-                <select id="tag-filter-select" aria-label="Filter by tag"></select>
-                <button id="clear-tag-filter-btn" class="manage-tags-btn">Clear</button>
-            </div>
-
-            <div id="tag-manager" class="tag-manager" style="display:none; margin-bottom:0.75rem;"></div>
-
-            <div class="task-search-area">
-                <input type="text" id="task-search" placeholder="Search tasks..." />
-                <div class="search-controls">
-                    <button id="search-btn">Search</button>
-                    <button id="clear-search-btn">Clear</button>
-                    <span id="search-count"></span>
-                </div>
-            </div>
-
-            <div class="advanced-filter-panel">
-                <div class="filter-header">
-                    <h3>Advanced Filters</h3>
-                    <button id="toggle-filters-btn" class="toggle-filters-btn">Show Filters</button>
-                </div>
-                <div class="filter-content" id="filter-content" style="display: none;">
-                    <div class="filter-row">
-                        <div class="filter-group">
-                            <label for="filter-status">Status:</label>
-                            <select id="filter-status" class="filter-select">
-                                <option value="">All</option>
-                                <option value="active">Active</option>
-                                <option value="completed">Completed</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="filter-priority">Priority:</label>
-                            <select id="filter-priority" class="filter-select">
-                                <option value="">All</option>
-                                <option value="1">🔴 High</option>
-                                <option value="2">🟡 Medium</option>
-                                <option value="3">🟢 Low</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="filter-category">Category:</label>
-                            <select id="filter-category" class="filter-select">
-                                <option value="">All Tags</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="filter-row">
-                        <div class="filter-group">
-                            <label for="filter-date-from">Due Date From:</label>
-                            <input type="date" id="filter-date-from" class="filter-input" />
-                        </div>
-                        <div class="filter-group">
-                            <label for="filter-date-to">Due Date To:</label>
-                            <input type="date" id="filter-date-to" class="filter-input" />
-                        </div>
-                        <div class="filter-group filter-actions">
-                            <button id="apply-filters-btn" class="apply-filters-btn">Apply Filters</button>
-                            <button id="clear-all-filters-btn" class="clear-filters-btn">Clear All Filters</button>
-                        </div>
-                    </div>
-                    <div class="active-filters-display" id="active-filters-display"></div>
-                </div>
-            </div>
-
-            <div class="task-filters">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" id="filter-active" data-filter="active">Active</button>
-                <button class="filter-btn" id="filter-completed" data-filter="completed">Completed</button>
-                <button class="filter-btn priority-filter" data-filter="priority-1">🔴 High</button>
-                <button class="filter-btn priority-filter" data-filter="priority-2">🟡 Medium</button>
-                <button class="filter-btn priority-filter" data-filter="priority-3">🟢 Low</button>
-            </div>
-
-            <div class="task-progress-container">
-                <div class="task-progress-bar-bg">
-                    <div class="task-progress-bar-fill" id="task-progress-bar"></div>
-                </div>
-                <div class="task-progress-info">
-                    <span id="task-progress-percent" class="task-progress-percent">0%</span>
-                    <span id="task-progress-summary" class="task-progress-summary"></span>
-                    <div class="task-progress-ring">
-                        <svg width="60" height="60">
-                            <circle cx="30" cy="30" r="26" stroke="#e0e0e0" stroke-width="6" fill="none"/>
-                            <circle id="task-progress-ring" cx="30" cy="30" r="26" stroke="#4f8cff" stroke-width="6" fill="none" stroke-linecap="round" />
-                        </svg>
-                        <span id="task-progress-ring-label" class="task-progress-ring-label">0%</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="view-mode-toggle">
-                <button class="view-mode-btn" id="list-mode-btn">List</button>
-                <button class="view-mode-btn" id="grid-mode-btn">Grid</button>
-                <button class="view-mode-btn" id="compact-mode-btn">Compact</button>
-            </div>
-
-            <ul id="task-list"></ul>
-
-            <div class="task-actions">
-                <button id="sort-priority-btn">Sort by Priority</button>
-                <button id="sort-date-btn">Sort by Date</button>
-                <button id="sort-tasks-btn">Sort A-Z</button>
-                <button id="export-data-btn">Export Data</button>
-                <button id="import-data-btn">Import Data</button>
-                <button id="clear-all-btn">Clear All</button>
-            </div>
-
-            <input type="file" id="import-file-input" accept=".json" style="display: none" />
-        </section>
-
-        <section class="card weather-widget">
-            <h2>Weather Report</h2>
-            <div class="weather-search" style="justify-content: center">
-                <input type="text" id="city-input" placeholder="Search city..." />
-                <button id="search-weather-btn">Search</button>
-                <button id="get-location-btn">Get My Location Weather</button>
-            </div>
-            <div id="weather-info" role="status" aria-live="polite">
-                <p class="loading-text">Search for a city or use your location to see the weather...</p>
-            </div>
-        </section>
-
-        <section class="card toast-demo-section">
-            <h2>Toast Notifications Demo</h2>
-            <p style="margin-bottom: 1rem; font-size: 14px; opacity: 0.85;">Test the custom toast notification system with different types and positioning:</p>
-            <div class="toast-demo-buttons">
-                <button id="toast-success-btn" class="demo-btn success-btn">Success Toast</button>
-                <button id="toast-error-btn" class="demo-btn error-btn">Error Toast</button>
-                <button id="toast-warning-btn" class="demo-btn warning-btn">Warning Toast</button>
-                <button id="toast-info-btn" class="demo-btn info-btn">Info Toast</button>
-            </div>
-            <div style="margin-top: 1rem;">
-                <label for="toast-position-select" style="font-weight: 500; margin-right: 0.5rem;">Position:</label>
-                <select id="toast-position-select" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--card-bg-color); color: var(--text-color);">
-                    <option value="top-right">Top Right</option>
-                    <option value="top-left">Top Left</option>
-                    <option value="bottom-right">Bottom Right</option>
-                    <option value="bottom-left">Bottom Left</option>
-                    <option value="top-center">Top Center</option>
-                    <option value="bottom-center">Bottom Center</option>
-                </select>
-                <button id="clear-all-toasts-btn" class="demo-btn" style="margin-left: 1rem;">Clear All Toasts</button>
-            </div>
-        </section>
-    </main>
-
-    <div id="shortcut-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h3>Keyboard Shortcuts</h3>
-            <ul>
-                <li><b>Enter</b>: Add Task (when input focused)</li>
-                <li><b>Ctrl+N</b>: Add Task</li>
-                <li><b>/</b>: Focus Task Input</li>
-                <li><b>Arrow Up/Down</b>: Navigate Tasks</li>
-                <li><b>Ctrl+Enter</b>: Complete Selected Task</li>
-                <li><b>Delete</b>: Delete Selected Task</li>
-                <li><b>Ctrl+S</b>: Sort Tasks</li>
-                <li><b>Ctrl+Shift+C</b>: Clear All Tasks</li>
-                <li><b>?</b>: Show Shortcut Help</li>
-                <li><b>Esc</b>: Close Shortcut Help</li>
-            </ul>
-            <button id="close-shortcut-modal">Close</button>
-        </div>
-    </div>
-
-    <div id="modal-backdrop" class="modal-backdrop" style="display:none;">
-        <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
-            <div class="modal-content">
-                <h3 id="modal-title"></h3>
-                <div id="modal-body"></div>
-                <div class="modal-actions">
-                    <button id="modal-confirm-btn" style="display:none;">Confirm</button>
-                    <button id="modal-cancel-btn" style="display:none;">Cancel</button>
-                    <button id="modal-close-btn">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <footer>
-        <p>&copy; <span id="year"></span> Fsoc-Medium Project. All rights reserved.</p>
-        <div class="footer-nav">
-            <a href="index.html">Dashboard</a> |
-            <a href="about.html">About</a> |
-            <a href="contact.html">Contact</a>
-        </div>
-    </footer>
-
-    <div id="toast-container" class="toast-container"></div>
-
-    <script src="script.js"></script>
-</body>
+ <!-- Scripts consolidated -->
+        <script src="script.js"></script>
+        
+    </body>
 </html>
