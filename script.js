@@ -1,3 +1,9 @@
+// --- Constants & Configurations ---
+const WEATHER_API_KEY = "4b1ee5452a2e3f68205153f28bf93927";
+const DEBOUNCE_DELAY = 500;
+const WEATHER_TIMEOUT_MS = 8000;
+const MAX_RETRIES = 3;
+
 // --- Toast Notification System ---
 class ToastNotification {
   constructor(options = {}) {
@@ -148,6 +154,7 @@ const toast = new ToastNotification({
   maxToasts: 5
 });
 
+// --- Document Ready Handler ---
 document.addEventListener("DOMContentLoaded", () => {
   //Fix recent changes
   // --- Task Manager Setup ---
@@ -179,6 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const themeToggle = document.getElementById("theme-toggle");
   const yearSpan = document.getElementById("year");
 
+  // --- State Management ---
   let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
   let tagRegistry = JSON.parse(localStorage.getItem("tags")) || {};
   let activeTagFilter = null;
@@ -1984,6 +1992,61 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
   }
 
 
+
+// --- Toast Notification System ---
+class ToastNotification {
+    // ...existing toast notification code...
+}
+
+// Initialize global toast instance
+const toast = new ToastNotification({
+    position: 'top-right',
+    defaultDuration: 5000,
+    maxToasts: 5
+});
+
+// --- Document Ready Handler ---
+document.addEventListener("DOMContentLoaded", () => {
+    // --- DOM Elements ---
+    // ...existing element selections...
+
+    // --- State Management ---
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    let tagRegistry = JSON.parse(localStorage.getItem("tags")) || {};
+    let activeTagFilter = null;
+    let currentFilter = "all";
+    let sortType = "none";
+    let currentWeatherController = null;
+
+    // --- Utility Functions ---
+    // ...existing utility functions...
+
+    // --- Task Management Functions ---
+    // ...existing task management code...
+
+    // --- Weather Functions ---
+    // ...existing weather functions...
+
+    // --- Event Handlers ---
+    // ...existing event handlers...
+
+    // --- Modal System ---
+    // ...existing modal code...
+
+    // --- Initialization ---
+    function init() {
+        applyFiltersFromURL();
+        updateCategoryDropdown();
+        renderTasksWithSkeleton();
+        updateTaskProgressBar();
+        if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+        getLocationWeather();
+    }
+    
+
+    // Start the application
+    init();
+});
   function init() {
     // Load filters from URL
     applyFiltersFromURL();
@@ -2416,4 +2479,41 @@ modalBackdrop.addEventListener('keydown', (e) => {
             e.preventDefault();
         }
     }
+});
+// ===== Theme Toggle =====
+const themeToggleBtn = document.getElementById("theme-toggle");
+
+// Check if the user already had a theme saved
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme === "dark-theme") {
+  document.body.classList.add("dark-theme");
+}
+
+// Toggle when the button is clicked
+themeToggleBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-theme");
+
+  // Save the current theme in localStorage
+  if (document.body.classList.contains("dark-theme")) {
+    localStorage.setItem("theme", "dark-theme");
+  } else {
+    localStorage.setItem("theme", "light-theme");
+  }
+});
+const toggleThemeBtn = document.createElement('button');
+toggleThemeBtn.textContent = '🌓 Toggle Theme';
+toggleThemeBtn.style.position = 'fixed';
+toggleThemeBtn.style.bottom = '20px';
+toggleThemeBtn.style.right = '20px';
+toggleThemeBtn.style.padding = '8px 12px';
+toggleThemeBtn.style.borderRadius = '8px';
+toggleThemeBtn.style.border = 'none';
+toggleThemeBtn.style.background = '#4f8cff';
+toggleThemeBtn.style.color = 'white';
+toggleThemeBtn.style.cursor = 'pointer';
+toggleThemeBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+document.body.appendChild(toggleThemeBtn);
+
+toggleThemeBtn.addEventListener('click', () => {
+  document.body.classList.toggle('dark-theme');
 });
