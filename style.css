@@ -143,18 +143,19 @@ body.dark-theme {
     --primary-color: #0f3460;
     --primary-hover-color: #e94560;
     --border-color: #2a3b5c;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --navbar-glass: rgba(22,33,62,0.85);
-    --navbar-border: rgba(233,69,96,0.15);
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --completed-color: #666;
+    --navbar-glass: rgba(22,33,62,0.90);
+    --navbar-border: rgba(79,140,255,0.25);
     --accent: #e94560;
     --priority-high: #e94560;
-    --priority-high-bg: rgba(233, 69, 96, 0.15);
+    --priority-high-bg: rgba(233, 69, 96, 0.2);
     --priority-medium: #ffd700;
-    --priority-medium-bg: rgba(255, 215, 0, 0.15);
+    --priority-medium-bg: rgba(255, 215, 0, 0.2);
     --priority-low: #3bd671;
-    --priority-low-bg: rgba(59, 214, 113, 0.15);
+    --priority-low-bg: rgba(59, 214, 113, 0.2);
+    --input-bg: rgba(42,59,92,0.6);
 }
-
 /* --- General Styles --- */
 * {
     margin: 0;

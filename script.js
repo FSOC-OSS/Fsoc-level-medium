@@ -27,7 +27,6 @@ class ToastNotification {
   }
 
   show(type, title, message, duration) {
-    // Remove oldest toast if limit reached
     if (this.toasts.length >= this.maxToasts) {
       this.remove(this.toasts[0].element);
     }
@@ -36,7 +35,6 @@ class ToastNotification {
     this.container.appendChild(toast.element);
     this.toasts.push(toast);
 
-    // Auto dismiss
     if (toast.duration > 0) {
       toast.timeout = setTimeout(() => {
         this.remove(toast.element);
@@ -97,12 +95,10 @@ class ToastNotification {
 
     const toast = this.toasts[index];
     
-    // Clear timeout if exists
     if (toast.timeout) {
       clearTimeout(toast.timeout);
     }
 
-    // Add removing animation
     toastElement.classList.add('removing');
     
     setTimeout(() => {
@@ -110,7 +106,7 @@ class ToastNotification {
         toastElement.parentNode.removeChild(toastElement);
       }
       this.toasts.splice(index, 1);
-    }, 300); // Match animation duration
+    }, 300);
   }
 
   success(message, title, duration) {
@@ -147,7 +143,6 @@ class ToastNotification {
   }
 }
 
-// Initialize global toast instance
 const toast = new ToastNotification({
   position: 'top-right',
   defaultDuration: 5000,
@@ -156,8 +151,11 @@ const toast = new ToastNotification({
 
 // --- Document Ready Handler ---
 document.addEventListener("DOMContentLoaded", () => {
-  //Fix recent changes
-  // --- Task Manager Setup ---
+  const modalBackdrop = document.getElementById('modal-backdrop');
+  if (modalBackdrop) {
+    modalBackdrop.style.display = 'none';
+  }
+
   const taskInput = document.getElementById("task-input");
   const dueDateInput = document.getElementById("due-date-input");
   const prioritySelect = document.getElementById("priority-select");
@@ -173,17 +171,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const clearSearchBtn = document.getElementById("clear-search-btn");
   const searchCount = document.getElementById("search-count");
 
-  // --- Export/Import Setup ---
   const exportBtn = document.getElementById("export-data-btn");
   const importBtn = document.getElementById("import-data-btn");
   const importFileInput = document.getElementById("import-file-input");
 
-  // --- Weather Widget Setup ---
   const cityInput = document.getElementById("city-input");
   const searchWeatherBtn = document.getElementById("search-weather-btn");
   const getLocationBtn = document.getElementById("get-location-btn");
   const weatherInfo = document.getElementById("weather-info");
-  const themeToggle = document.getElementById("theme-toggle");
   const yearSpan = document.getElementById("year");
 
   // --- State Management ---
@@ -194,7 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let sortType = "none";
   let currentWeatherController = null;
 
-  // --- Sorting State ---
   let sortState = JSON.parse(localStorage.getItem("sortState")) || {
     key: "title",
     direction: "asc"
@@ -215,26 +209,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const WEATHER_TIMEOUT_MS = 8000;
   const MAX_RETRIES = 3;
 
-    // Hamburger Functionality
-    const hamburger = document.getElementById("hamburger");
-const sidebar = document.getElementById("sidebar");
-const closeBtn = document.getElementById("close-btn");
-const hamburgertabs = document.getElementById("hamburger-tabs")
+  const hamburger = document.getElementById("hamburger");
+  const sidebar = document.getElementById("sidebar");
+  const closeBtn = document.getElementById("close-btn");
+  const hamburgerLinks = document.querySelectorAll(".hamburger-link");
 
-hamburger.addEventListener("click", () => {
-  sidebar.classList.add("active");
-});
+  if (hamburger) {
+    hamburger.addEventListener("click", () => {
+      sidebar.classList.add("active");
+    });
+  }
 
-hamburgertabs.addEventListener("click",()=>{
-  sidebar.classList.remove("active");
-})
+  if (hamburgerLinks) {
+    hamburgerLinks.forEach(link => {
+      link.addEventListener("click", () => {
+        sidebar.classList.remove("active");
+      });
+    });
+  }
 
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      sidebar.classList.remove("active");
+    });
+  }
 
-closeBtn.addEventListener("click", () => {
-  sidebar.classList.remove("active");
-});
-
-  // --- Validation State ---
   let taskInputError = taskInput.parentNode.querySelector(".input-error");
   if (!taskInputError) {
     taskInputError = document.createElement("span");
@@ -253,7 +252,6 @@ closeBtn.addEventListener("click", () => {
     dueDateInput.parentNode.insertBefore(dueDateInputError, dueDateInput.nextSibling);
   }
 
-  // --- Utility Functions ---
   function debounce(func, delay) {
     let timer = null;
     return function (...args) {
@@ -579,7 +577,6 @@ closeBtn.addEventListener("click", () => {
     }
   }
 
-  // --- Task Data Model ---
   function addTask() {
     if (!validateForm()) return;
     const text = taskInput.value.trim();
@@ -707,29 +704,32 @@ closeBtn.addEventListener("click", () => {
       }
     });
   }
+
   let selectedTaskIndex = -1;
 
-function focusTaskInput() {
+  function focusTaskInput() {
     document.getElementById('task-input').focus();
-}
+  }
 
-function showShortcutModal() {
-    document.getElementById('shortcut-modal').style.display = 'flex';
-}
+  function showShortcutModal() {
+    const modal = document.getElementById('shortcut-modal');
+    if (modal) modal.style.display = 'flex';
+  }
 
-function hideShortcutModal() {
-    document.getElementById('shortcut-modal').style.display = 'none';
-}
+  function hideShortcutModal() {
+    const modal = document.getElementById('shortcut-modal');
+    if (modal) modal.style.display = 'none';
+  }
 
-function selectTask(index) {
+  function selectTask(index) {
     const tasks = document.querySelectorAll('#task-list li');
     tasks.forEach((task, i) => {
-        task.classList.toggle('selected', i === index);
+      task.classList.toggle('selected', i === index);
     });
     selectedTaskIndex = index;
-}
+  }
 
-function moveSelection(offset) {
+  function moveSelection(offset) {
     const tasks = document.querySelectorAll('#task-list li');
     if (tasks.length === 0) return;
     let newIndex = selectedTaskIndex + offset;
@@ -737,87 +737,79 @@ function moveSelection(offset) {
     if (newIndex >= tasks.length) newIndex = tasks.length - 1;
     selectTask(newIndex);
     tasks[newIndex].scrollIntoView({ block: 'nearest' });
-}
+  }
 
-document.addEventListener('keydown', function(e) {
-    // Ignore shortcuts if modal is open
-    if (document.getElementById('shortcut-modal').style.display === 'flex') {
-        if (e.key === 'Escape') hideShortcutModal();
-        return;
+  document.addEventListener('keydown', function(e) {
+    const shortcutModal = document.getElementById('shortcut-modal');
+    if (shortcutModal && shortcutModal.style.display === 'flex') {
+      if (e.key === 'Escape') hideShortcutModal();
+      return;
     }
 
-    // Show shortcut modal
     if (e.key === '?') {
-        showShortcutModal();
-        e.preventDefault();
-        return;
+      showShortcutModal();
+      e.preventDefault();
+      return;
     }
 
-    // Focus task input
     if (e.key === '/') {
-        focusTaskInput();
-        e.preventDefault();
-        return;
+      focusTaskInput();
+      e.preventDefault();
+      return;
     }
 
-    // Add task
     if ((e.ctrlKey && e.key === 'n') || 
         (document.activeElement.id === 'task-input' && e.key === 'Enter')) {
-        document.getElementById('add-task-btn').click();
-        e.preventDefault();
-        return;
+      document.getElementById('add-task-btn').click();
+      e.preventDefault();
+      return;
     }
 
-    // Sort tasks
     if (e.ctrlKey && e.key === 's') {
-        document.getElementById('sort-tasks-btn').click();
-        e.preventDefault();
-        return;
+      document.getElementById('sort-tasks-btn').click();
+      e.preventDefault();
+      return;
     }
 
-    // Clear all tasks
     if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c') {
-        document.getElementById('clear-all-btn').click();
-        e.preventDefault();
-        return;
+      document.getElementById('clear-all-btn').click();
+      e.preventDefault();
+      return;
     }
 
-    // Navigate tasks
     if (e.key === 'ArrowDown') {
-        moveSelection(1);
-        e.preventDefault();
-        return;
+      moveSelection(1);
+      e.preventDefault();
+      return;
     }
     if (e.key === 'ArrowUp') {
-        moveSelection(-1);
-        e.preventDefault();
-        return;
+      moveSelection(-1);
+      e.preventDefault();
+      return;
     }
 
-    // Complete selected task
     if (e.ctrlKey && e.key === 'Enter' && selectedTaskIndex !== -1) {
-        const tasks = document.querySelectorAll('#task-list li');
-        const completeBtn = tasks[selectedTaskIndex]?.querySelector('.complete-btn');
-        completeBtn?.click();
-        e.preventDefault();
-        return;
+      const tasks = document.querySelectorAll('#task-list li');
+      const completeBtn = tasks[selectedTaskIndex]?.querySelector('.complete-btn');
+      completeBtn?.click();
+      e.preventDefault();
+      return;
     }
 
-    // Delete selected task
     if (e.key === 'Delete' && selectedTaskIndex !== -1) {
-        const tasks = document.querySelectorAll('#task-list li');
-        const deleteBtn = tasks[selectedTaskIndex]?.querySelector('.delete-btn');
-        deleteBtn?.click();
-        e.preventDefault();
-        return;
+      const tasks = document.querySelectorAll('#task-list li');
+      const deleteBtn = tasks[selectedTaskIndex]?.querySelector('.delete-btn');
+      deleteBtn?.click();
+      e.preventDefault();
+      return;
     }
-});
+  });
 
-document.getElementById('close-shortcut-modal').addEventListener('click', hideShortcutModal);
+  const closeShortcutModalBtn = document.getElementById('close-shortcut-modal');
+  if (closeShortcutModalBtn) {
+    closeShortcutModalBtn.addEventListener('click', hideShortcutModal);
+  }
 
-// Add sele
-
-  // --- Sorting ---
   function sortTasksByType(tasksArr) {
     let sorted = [...tasksArr];
     
@@ -927,8 +919,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     if (searchCount) searchCount.textContent = q ? `${matches.length} match(es)` : "";
     if (q && searchBtn && searchBtn.dataset.active === "true") filteredTasks = matches;
 
-    // Sorting
-    // Sorting: user-driven sortType takes precedence; otherwise only sort by column when a key is explicitly set
     if (sortType !== "none") {
       filteredTasks = sortTasksByType(filteredTasks);
     } else if (sortState && sortState.key) {
@@ -950,7 +940,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       return;
     }
 
-    // Table header for sorting
     const header = document.createElement("li");
     header.className = "task-header";
     header.innerHTML = `
@@ -974,7 +963,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       const originalIndex = tasks.findIndex((t) => t.id === task.id);
       const li = document.createElement("li");
       li.className = "task-item";
-      // mark as draggable-enabled for pointer-based DnD
       li.classList.add('draggable-task');
       li.dataset.id = task.id;
       li.dataset.index = originalIndex;
@@ -984,7 +972,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       li.style.padding = "0.5rem 0.5rem";
       li.style.transition = "background 0.2s";
 
-      // Highlight overdue tasks
       let isOverdue = false;
       if (task.dueDate && !task.completed) {
         const now = new Date();
@@ -996,7 +983,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
         }
       }
 
-      // Title with checkbox
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = task.completed;
@@ -1014,17 +1000,14 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       titleCell.appendChild(taskText);
       titleCell.innerHTML += getPriorityBadge(task.priority);
 
-      // Date Added
       const dateCell = document.createElement("span");
       const dateObj = new Date(task.created);
       dateCell.textContent = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      // Due Date
       const dueDateCell = document.createElement("span");
       dueDateCell.textContent = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "-";
       if (isOverdue) dueDateCell.classList.add("overdue-date");
 
-      // Priority Dropdown
       const priorityDropdown = document.createElement("select");
       priorityDropdown.className = "priority-dropdown";
       priorityDropdown.innerHTML = `
@@ -1036,18 +1019,15 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
         changePriority(originalIndex, e.target.value);
       });
 
-      // Status
       const statusCell = document.createElement("span");
       statusCell.textContent = task.completed ? "Done" : "Active";
       statusCell.style.color = task.completed ? "var(--completed-color)" : "var(--primary-color)";
 
-      // Delete
       const deleteBtn = document.createElement("button");
       deleteBtn.className = "delete-btn";
       deleteBtn.textContent = "🗑️";
       deleteBtn.dataset.action = "delete";
 
-      // Tags badges
       const tagsCell = document.createElement('span');
       if (Array.isArray(task.tags)) {
         task.tags.forEach(tg => {
@@ -1086,11 +1066,9 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       li.appendChild(deleteBtn);
       taskList.appendChild(li);
 
-      // Pointer-based drag handlers (works with mouse and touch via Pointer Events)
       li.addEventListener('pointerdown', onTaskPointerDown);
     });
 
-    // Add sorting event listeners to column headers
     taskList.querySelectorAll(".sortable").forEach((el) => {
       el.style.cursor = "pointer";
       el.addEventListener("click", () => {
@@ -1108,14 +1086,11 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     });
   }
 
-  // --- Drag & Drop (pointer-based) ---
   let dragState = {};
 
   function onTaskPointerDown(e) {
-    // only start on primary button / primary pointer
     if (e.button && e.button !== 0) return;
     const li = e.currentTarget;
-    // avoid starting drag when interacting with interactive controls
     if (e.target.closest('input,select,button,a,textarea,option')) return;
 
     e.preventDefault();
@@ -1137,22 +1112,18 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     if (!dragState || e.pointerId !== dragState.pointerId) return;
 
     const dy = e.clientY - dragState.startY;
-    // require small threshold before starting drag to avoid accidental drags
     if (!dragState.dragging && Math.abs(dy) < 6) return;
 
     if (!dragState.dragging) {
-      // initialize drag visuals
       const li = dragState.originLi;
       const rect = li.getBoundingClientRect();
 
-      // placeholder
       const placeholder = document.createElement('li');
       placeholder.className = 'drag-placeholder';
       placeholder.style.height = rect.height + 'px';
 
       li.parentNode.insertBefore(placeholder, li.nextSibling);
 
-      // clone shown under pointer
       const clone = li.cloneNode(true);
       clone.classList.add('drag-clone');
       clone.style.position = 'fixed';
@@ -1172,12 +1143,10 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       dragState.offsetY = e.clientY - rect.top;
     }
 
-    // move clone
     if (dragState.clone) {
       dragState.clone.style.top = (e.clientY - dragState.offsetY) + 'px';
     }
 
-    // determine where to move placeholder
     const children = Array.from(taskList.querySelectorAll('li.task-item'));
     let insertBeforeEl = null;
     for (let i = 0; i < children.length; i++) {
@@ -1206,22 +1175,18 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       const placeholder = dragState.placeholder;
       const originLi = dragState.originLi;
 
-      // place the original li where the placeholder is
       placeholder.parentNode.insertBefore(originLi, placeholder);
       originLi.style.visibility = '';
 
-      // clean up clone and placeholder
       if (dragState.clone && dragState.clone.parentNode) dragState.clone.parentNode.removeChild(dragState.clone);
       if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
 
-      // rebuild tasks order while preserving tasks not currently visible (filters/search)
       const orderedLis = Array.from(taskList.querySelectorAll('li.task-item'));
       const visibleIds = orderedLis.map((it) => String(it.dataset.id));
       const idToTask = new Map(tasks.map(t => [String(t.id), t]));
       const visibleIdSet = new Set(visibleIds);
       const reorderedVisibleTasks = visibleIds.map(id => idToTask.get(id)).filter(Boolean);
 
-      // find first original index among visible items to decide insertion point
       const firstVisibleId = visibleIds[0];
       const firstVisibleOldIndex = tasks.findIndex(t => String(t.id) === firstVisibleId);
 
@@ -1230,7 +1195,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       for (let i = 0; i < tasks.length; i++) {
         const t = tasks[i];
         if (visibleIdSet.has(String(t.id))) {
-          // skip visible tasks; they'll be inserted at the insertion point
           continue;
         }
         if (!inserted && i === firstVisibleOldIndex) {
@@ -1242,7 +1206,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       if (!inserted) newTasksArr.push(...reorderedVisibleTasks);
 
       tasks = newTasksArr.map(normalizeTask);
-      // Clear sorting so manual order persists
       sortType = 'none';
       if (sortState) { sortState.key = null; }
       saveSortState();
@@ -1250,14 +1213,12 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       renderTasksWithSkeleton();
       updateTaskProgressBar();
     } else {
-      // if drag never started, release pointer capture
       try { dragState.originLi.releasePointerCapture(dragState.pointerId); } catch (e) {}
     }
 
     dragState = {};
   }
 
-  // Tag helpers
   function getTagColors(str) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -1299,7 +1260,7 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     const activeWrap = document.getElementById('active-tag-filter');
     if (activeWrap) activeWrap.textContent = activeTagFilter ? `Filtering: ${activeTagFilter}` : '';
     updateTagFilterOptions();
-    updateCategoryDropdown(); // Update advanced filter category dropdown
+    updateCategoryDropdown();
   }
 
   function updateTagFilterOptions() {
@@ -1470,7 +1431,7 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     tagFilterSelect.addEventListener('change', (e) => {
       const val = e.target.value || null;
       activeTagFilter = val;
-      renderTasks();
+      renderTasksWithSkeleton();
     });
   }
 
@@ -1480,7 +1441,7 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
       activeTagFilter = null;
       const sel = document.getElementById('tag-filter-select');
       if (sel) sel.value = '';
-      renderTasks();
+      renderTasksWithSkeleton();
     });
   }
 
@@ -1511,7 +1472,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
 
   renderPopularTags();
 
-  // --- Export/Import Functions ---
   function exportTasks() {
     const dataStr = JSON.stringify(tasks, null, 2);
     const blob = new Blob([dataStr], { type: "application/json" });
@@ -1524,6 +1484,7 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    toast.success('Tasks exported successfully!', 'Export Complete');
   }
 
   function importTasksFromFile(file) {
@@ -1553,7 +1514,18 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     reader.readAsText(file);
   }
 
-  // --- Weather Functions ---
+  if (exportBtn) {
+    exportBtn.addEventListener("click", exportTasks);
+  }
+
+  if (importBtn && importFileInput) {
+    importBtn.addEventListener("click", () => importFileInput.click());
+    importFileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) importTasksFromFile(file);
+    });
+  }
+
   function cancelOngoingWeatherRequest() {
     if (currentWeatherController) {
       try {
@@ -1690,7 +1662,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     );
   }
 
-  // --- Weather Search Events ---
   const debouncedFetchWeather = debounce(() => {
     const city = cityInput.value.trim();
     if (city === "") {
@@ -1701,31 +1672,46 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     fetchWeather(city);
   }, DEBOUNCE_DELAY);
 
-  cityInput.addEventListener("input", debouncedFetchWeather);
+  if (cityInput) {
+    cityInput.addEventListener("input", debouncedFetchWeather);
+    cityInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        fetchWeather(cityInput.value.trim());
+      }
+    });
+  }
 
-  cityInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
+  if (searchWeatherBtn) {
+    searchWeatherBtn.addEventListener("click", () => {
       fetchWeather(cityInput.value.trim());
-    }
-  });
+    });
+  }
 
-  searchWeatherBtn.addEventListener("click", () => {
-    fetchWeather(cityInput.value.trim());
-  });
+  if (getLocationBtn) {
+    getLocationBtn.addEventListener("click", getLocationWeather);
+  }
 
-  getLocationBtn.addEventListener("click", getLocationWeather);
+  if (addTaskBtn) {
+    addTaskBtn.addEventListener("click", addTask);
+  }
 
-  // --- Task Events ---
-  addTaskBtn.addEventListener("click", addTask);
-  taskInput.addEventListener("input", validateTaskInput);
-  dueDateInput.addEventListener("input", validateDueDateInput);
-  taskInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") addTask();
-  });
-  dueDateInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") addTask();
-  });
-  clearAllBtn.addEventListener("click", clearAllTasks);
+  if (taskInput) {
+    taskInput.addEventListener("input", validateTaskInput);
+    taskInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addTask();
+    });
+  }
+
+  if (dueDateInput) {
+    dueDateInput.addEventListener("input", validateDueDateInput);
+    dueDateInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addTask();
+    });
+  }
+
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener("click", clearAllTasks);
+  }
 
   filterBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -1736,18 +1722,20 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     });
   });
 
-  taskList.addEventListener("click", (e) => {
-    const li = e.target.closest("li.task-item");
-    if (!li) return;
-    const index = Number(li.dataset.index);
-    if (e.target.dataset.action === "toggle") {
-      toggleTaskCompletion(index);
-    } else if (e.target.dataset.action === "delete") {
-      deleteTask(index);
-    } else if (e.target.dataset.action === "edit") {
-      enableInlineEdit(index, e.target);
-    }
-  });
+  if (taskList) {
+    taskList.addEventListener("click", (e) => {
+      const li = e.target.closest("li.task-item");
+      if (!li) return;
+      const index = Number(li.dataset.index);
+      if (e.target.dataset.action === "toggle") {
+        toggleTaskCompletion(index);
+      } else if (e.target.dataset.action === "delete") {
+        deleteTask(index);
+      } else if (e.target.dataset.action === "edit") {
+        enableInlineEdit(index, e.target);
+      }
+    });
+  }
 
   if (taskSearch) {
     taskSearch.addEventListener("input", () => {
@@ -1776,7 +1764,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     });
   }
 
-  // For sort buttons:
   if (sortPriorityBtn) {
     sortPriorityBtn.addEventListener("click", () => {
       if (sortType === "priority") {
@@ -1814,25 +1801,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
         sortState.direction = "asc";
       }
       saveSortState();
-      renderTasksWithSkeleton();
-    });
-  }
-
-  // For tag filter select:
-  if (tagFilterSelect) {
-    tagFilterSelect.addEventListener('change', (e) => {
-      const val = e.target.value || null;
-      activeTagFilter = val;
-      renderTasksWithSkeleton();
-    });
-  }
-
-  // For clear tag filter:
-  if (clearTagFilterBtn) {
-    clearTagFilterBtn.addEventListener('click', () => {
-      activeTagFilter = null;
-      const sel = document.getElementById('tag-filter-select');
-      if (sel) sel.value = '';
       renderTasksWithSkeleton();
     });
   }
@@ -1938,7 +1906,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     renderTasksWithSkeleton();
   });
 
-  // For add/delete/complete/clear actions, keep renderTasks() for instant update:
   // --- Skeleton Loader ---
   function showTaskSkeleton(count = 5) {
     taskList.innerHTML = "";
@@ -1947,27 +1914,27 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     for (let i = 0; i < count; i++) {
       const li = document.createElement("li");
       li.className = "skeleton-item";
-      // Title
+      
       const title = document.createElement("div");
       title.className = "skeleton-bar long";
       title.innerHTML = '<div class="skeleton-shimmer"></div>';
-      // Date Added
+      
       const date = document.createElement("div");
       date.className = "skeleton-bar short";
       date.innerHTML = '<div class="skeleton-shimmer"></div>';
-      // Due Date
+      
       const due = document.createElement("div");
       due.className = "skeleton-bar short";
       due.innerHTML = '<div class="skeleton-shimmer"></div>';
-      // Priority
+      
       const priority = document.createElement("div");
       priority.className = "skeleton-bar circle";
       priority.innerHTML = '<div class="skeleton-shimmer"></div>';
-      // Status
+      
       const status = document.createElement("div");
       status.className = "skeleton-bar medium";
       status.innerHTML = '<div class="skeleton-shimmer"></div>';
-      // Delete
+      
       const del = document.createElement("div");
       del.className = "skeleton-bar circle";
       del.innerHTML = '<div class="skeleton-shimmer"></div>';
@@ -1983,7 +1950,6 @@ document.getElementById('close-shortcut-modal').addEventListener('click', hideSh
     taskList.appendChild(skeletonUl);
   }
 
-  
   function renderTasksWithSkeleton() {
     showTaskSkeleton(6); 
     setTimeout(() => {
@@ -2060,222 +2026,8 @@ document.addEventListener("DOMContentLoaded", () => {
     getLocationWeather();
   }
 
-  
-  filterBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      filterBtns.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentFilter = btn.dataset.filter;
-      renderTasksWithSkeleton();
-    });
-  });
-
-  if (taskSearch) {
-    taskSearch.addEventListener("input", () => {
-      renderTasksWithSkeleton();
-    });
-  }
-
-  if (searchBtn) {
-    searchBtn.addEventListener("click", () => {
-      const isActive = searchBtn.dataset.active === "true";
-      searchBtn.dataset.active = isActive ? "false" : "true";
-      searchBtn.classList.toggle("active", !isActive);
-      renderTasksWithSkeleton();
-    });
-  }
-
-  if (clearSearchBtn) {
-    clearSearchBtn.addEventListener("click", () => {
-      if (taskSearch) taskSearch.value = "";
-      if (searchBtn) {
-        searchBtn.dataset.active = "false";
-        searchBtn.classList.remove("active");
-      }
-      if (searchCount) searchCount.textContent = "";
-      renderTasksWithSkeleton();
-    });
-  }
-
-  
-  if (sortPriorityBtn) {
-    sortPriorityBtn.addEventListener("click", () => {
-      if (sortType === "priority") {
-        sortType = "none";
-        sortPriorityBtn.textContent = "Sort by Priority";
-      } else {
-        sortType = "priority";
-        sortPriorityBtn.textContent = "Clear Priority Sort";
-      }
-      renderTasksWithSkeleton();
-    });
-  }
-
-  if (sortDateBtn) {
-    sortDateBtn.addEventListener("click", () => {
-      if (sortType === "date") {
-        sortType = "none";
-        sortDateBtn.textContent = "Sort by Date";
-      } else {
-        sortType = "date";
-        sortDateBtn.textContent = "Clear Date Sort";
-      }
-      renderTasksWithSkeleton();
-    });
-  }
-
-  if (sortTasksBtn) {
-    sortTasksBtn.addEventListener("click", () => {
-      if (sortType === "title") {
-        sortType = "none";
-        sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
-      } else {
-        sortType = "title";
-        sortState.key = "title";
-        sortState.direction = "asc";
-      }
-      saveSortState();
-      renderTasksWithSkeleton();
-    });
-  }
-
-  if (tagFilterSelect) {
-    tagFilterSelect.addEventListener('change', (e) => {
-      const val = e.target.value || null;
-      activeTagFilter = val;
-      renderTasksWithSkeleton();
-    });
-  }
-
-  if (clearTagFilterBtn) {
-    clearTagFilterBtn.addEventListener('click', () => {
-      activeTagFilter = null;
-      const sel = document.getElementById('tag-filter-select');
-      if (sel) sel.value = '';
-      renderTasksWithSkeleton();
-    });
-  }
-
-  function init() {
-    renderTasks();
-    updateTaskProgressBar();
-    if (yearSpan) yearSpan.textContent = new Date().getFullYear();
-    getLocationWeather();
-  }
-
   init();
-});
 
-document.addEventListener('DOMContentLoaded', () => {
-  const modal = document.getElementById('modal');
-  const modalTitle = document.getElementById('modal-title');
-  const modalContent = document.getElementById('modal-content');
-  const btnCancel = document.getElementById('modal-cancel');
-  const btnConfirm = document.getElementById('modal-confirm');
-
-  let activeElementBeforeModal = null;
-  let onConfirmCallback = null;
-  let onCancelCallback = null;
-
-  const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-
-  function openModal({ title = '', content = '', type = 'alert', onConfirm = null, onCancel = null }) {
-    activeElementBeforeModal = document.activeElement;
-    modalTitle.textContent = title;
-    modalContent.innerHTML = content;
-
-    onConfirmCallback = onConfirm;
-    onCancelCallback = onCancel;
-
-    if (type === 'alert') {
-      btnConfirm.style.display = 'inline-block';
-      btnCancel.style.display = 'none';
-    } else if (type === 'confirm' || type === 'form') {
-      btnConfirm.style.display = 'inline-block';
-      btnCancel.style.display = 'inline-block';
-    }
-
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden';
-
-    const focusables = modal.querySelectorAll(focusableSelectors);
-    if (focusables.length) focusables[0].focus();
-  }
-
-  function closeModal() {
-    modal.classList.remove('show');
-    document.body.style.overflow = '';
-    if (activeElementBeforeModal) activeElementBeforeModal.focus();
-    onConfirmCallback = null;
-    onCancelCallback = null;
-  }
-
-  btnConfirm.addEventListener('click', () => {
-    if (onConfirmCallback) onConfirmCallback();
-    closeModal();
-  });
-
-  btnCancel.addEventListener('click', () => {
-    if (onCancelCallback) onCancelCallback();
-    closeModal();
-  });
-
-  modal.addEventListener('click', e => {
-    if (e.target === modal) closeModal();
-  });
-
-  document.addEventListener('keydown', e => {
-    if (!modal.classList.contains('show')) return;
-
-    if (e.key === 'Escape') {
-      if (onCancelCallback) onCancelCallback();
-      closeModal();
-    }
-
-    if (e.key === 'Tab') {
-      const focusables = [...modal.querySelectorAll(focusableSelectors)];
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-  });
-
-  // Demo buttons
-  document.getElementById('open-alert').addEventListener('click', () => {
-    openModal({ title: 'Alert', content: 'This is an alert modal!', type: 'alert' });
-  });
-
-  document.getElementById('open-confirm').addEventListener('click', () => {
-    openModal({
-      title: 'Confirm',
-      content: 'Do you want to proceed?',
-      type: 'confirm',
-      onConfirm: () => toast.success('Action confirmed successfully!', 'Confirmed'),
-      onCancel: () => toast.info('Action was cancelled', 'Cancelled')
-    });
-  });
-
-  document.getElementById('open-form').addEventListener('click', () => {
-    openModal({
-      title: 'Form',
-      content: `<form>
-                  <label>Name: <input type="text" /></label><br/><br/>
-                  <label>Email: <input type="email" /></label>
-                </form>`,
-      type: 'form',
-      onConfirm: () => toast.success('Form submitted successfully!', 'Form Submitted'),
-      onCancel: () => toast.info('Form submission cancelled', 'Cancelled')
-    });
-  });
-
-  // --- Toast Notification Demo Buttons ---
   const toastSuccessBtn = document.getElementById('toast-success-btn');
   const toastErrorBtn = document.getElementById('toast-error-btn');
   const toastWarningBtn = document.getElementById('toast-warning-btn');
